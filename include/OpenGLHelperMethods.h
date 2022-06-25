@@ -62,6 +62,14 @@ GLuint initShaders(const std::vector<std::filesystem::path>& shaderPaths);
 GLuint generateAttachmentTexture();
 
 /**
+ * @brief 
+ * TODO; add details 
+ * @param iconFileName 
+ * @return GLFWimage 
+ */
+void loadGLFWIcon(GLFWwindow* thisWindow, const std::filesystem::path iconFileNamePath);
+
+/**
  * Load Texture
  * @note code from Yasmin and commit and some modification make by Timbre Freeman
  * @note (used devil to load the image)
@@ -69,7 +77,7 @@ GLuint generateAttachmentTexture();
  * @param filename path to image file
  * @return GL Texture ID
  */
-//unsigned int loadTexture(const char* filename);
+GLuint loadTexture(const char* filename);
 
 /**
  * Load Cube Map Texture

@@ -23,8 +23,8 @@
 #include <GLFW/glfw3.h>
 
 // Image lib
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+// #define STB_IMAGE_IMPLEMENTATION
+// #include <stb_image.h>
 
 // Math Lib
 #define GLM_FORCE_RADIANS
@@ -150,19 +150,20 @@ int main(int argc, char* argv[]) {
     }
 
     // icon
-    SPDLOG_INFO("Setup icon for the window");
-    GLFWimage icons[1];
-    icons[0].pixels = stbi_load(
-            "res/icon/Timbre-Logo_O.png",
-            &icons[0].width,
-            &icons[0].height,
-            nullptr, 4);
-    if (icons[0].pixels == nullptr) {
-        SPDLOG_ERROR("Unable to load icon");
-    } else {
-        glfwSetWindowIcon(window, 1, icons);
-        stbi_image_free(icons[0].pixels);
-    }
+    // SPDLOG_INFO("Setup icon for the window");
+    // GLFWimage icons[1];
+    // icons[0].pixels = stbi_load(
+    //         "res/icon/Timbre-Logo_O.png",
+    //         &icons[0].width,
+    //         &icons[0].height,
+    //         nullptr, 4);
+    // if (icons[0].pixels == nullptr) {
+    //     SPDLOG_ERROR("Unable to load icon");
+    // } else {
+    //     glfwSetWindowIcon(window, 1, icons);
+    //     stbi_image_free(icons[0].pixels);
+    // }
+    loadGLFWIcon(window, "res/icon/Timbre-Logo_O.png");
 
     // Initialize GLEW
     SPDLOG_INFO("Initialize GLEW");
@@ -188,7 +189,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     SPDLOG_INFO("setting up some variables for Initialize");
-    Sphere mainSphere( 64);
+    Sphere mainSphere(64);
     sphere = &mainSphere;
 
     SPDLOG_INFO("Running Initialize method");
@@ -285,7 +286,7 @@ int main(int argc, char* argv[]) {
         updateAngle(deltaTime);
 
     }
-    SPDLOG_INFO(spdlog::fmt_lib::format("Avg FPS: {:0f}", avgFPS));
+    SPDLOG_INFO(spdlog::fmt_lib::format("Exit Window Loop, Avg FPS: {:0f}", avgFPS));
 
     // Close OpenGL window and terminate GLFW
     SPDLOG_INFO("Close OpenGL window and terminate GLFW");
@@ -389,11 +390,11 @@ glm::mat4 model_matrix(1.0f);
 /**
  * Vector of where the light position in 3d world
  */
-glm::vec4 light_position(10.0, 6.0, 8.0, 1.0);
+glm::vec4 light_position(10.0f, 6.0f, 8.0f, 1.0f);
 glm::vec4 light_intensity(1.0f, 1.0f, 1.0f, 1.0f);
-glm::vec4 material_ambient(0.9, 0.5, 0.3, 1.0f);
-glm::vec4 material_diffuse(0.9, 0.5, 0.3, 1.0f);
-glm::vec4 material_specular(0.8, 0.8, 0.8, 1.0f);
+glm::vec4 material_ambient(0.9f, 0.9f, 0.9f, 1.0f);
+glm::vec4 material_diffuse(0.9f, 0.9f, 0.9f, 1.0f);
+glm::vec4 material_specular(0.9f, 0.9f, 0.9f, 1.0f);
 
 float material_shininess = 50.0;
 glm::vec4 ambient_product = light_intensity * material_ambient;
@@ -420,6 +421,9 @@ GLint material_shininess_loc;
  * Angle used for rotating the view (camera)
  */
 GLfloat rotateAngle = 0.0f;
+
+// Texture ID's
+GLuint earthTexID;
 
 //          --- Methods ---
 
@@ -452,6 +456,8 @@ void setUniformLocations(GLuint shaderProgram) {
 
     material_shininess_loc = glGetUniformLocation(shaderProgram, "Shininess");
     glUniform1f(material_shininess_loc, material_shininess);
+
+    glUniform1i(glGetUniformLocation(program, "Tex1"), 0);
 }
 
 /**
@@ -474,7 +480,9 @@ void Initialize(){
     setUniformLocations(program);
 
     // Set Clear Color (background color)
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    earthTexID = loadTexture("res/textures/Earth.jpg");
 
     // TODO: see why this is here
     // glEnable(GL_PROGRAM_POINT_SIZE);
@@ -547,9 +555,14 @@ void Display() {
     projection_matrix = glm::perspective(glm::radians(45.0f), aspect, 0.3f, 100.0f);
     glUniformMatrix4fv(projection_matrix_loc, 1, GL_FALSE, (GLfloat*)&projection_matrix[0]);
 
+    model_matrix = glm::mat4(1.0f);
+
     // ---- Draw things ----
 
-    model_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 2.0f));
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, earthTexID);
+    model_matrix = glm::scale(model_matrix, glm::vec3(2.0f, 2.0f, 2.0f));
+    model_matrix = glm::rotate(model_matrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     glUniformMatrix4fv(matrix_loc, 1, GL_FALSE, (GLfloat*)&model_matrix[0]);
     sphere->draw();
 

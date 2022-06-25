@@ -14,6 +14,9 @@
 #include <spdlog/spdlog.h>
 #include "spdlog/fmt/bin_to_hex.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include "main.h"
 
 /**
@@ -174,6 +177,22 @@ GLuint initShaders(const std::vector<std::filesystem::path>& shaderPaths) {
     return initShaders(shaderPaths.data(), static_cast<int>(shaderPaths.size()));
 }
 
+void loadGLFWIcon(GLFWwindow* thisWindow, const std::filesystem::path iconFileNamePath) {
+    SPDLOG_INFO(spdlog::fmt_lib::format("Setup icon \"{}\" for the window", iconFileNamePath.filename().string()));
+    GLFWimage icons[1];
+    icons[0].pixels = stbi_load(
+            iconFileNamePath.c_str(),
+            &icons[0].width,
+            &icons[0].height,
+            nullptr, 4);
+    if (icons[0].pixels == nullptr) {
+        SPDLOG_ERROR(spdlog::fmt_lib::format("Unable to load icon \"{}\"", iconFileNamePath.string()));
+    } else {
+        glfwSetWindowIcon(thisWindow, 1, icons);
+        stbi_image_free(icons[0].pixels);
+    }
+}
+
 /**
  * Generates a texture that is suited for attachments to a framebuffer
  * @note code from Yasmin and commit and some modification make by Timbre Freeman
@@ -204,50 +223,32 @@ GLuint generateAttachmentTexture() {
  * @param filename path to image file
  * @return GL Texture ID
  */
-//unsigned int loadTexture(const char* filename) {
-//    if (devILIsSetup) {
-//        ILboolean success;
-//        unsigned int imageID;
-//        ilGenImages(1, &imageID);
-//
-//        ilBindImage(imageID); /* Binding of DevIL image name */
-//        ilEnable(IL_ORIGIN_SET);
-//        ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
-//        success = ilLoadImage(filename);
-//
-//        if (!success) {
-//            fprintf(stderr, "Error: loadTexture: Couldn't load the following texture file: %s\n", filename);
-//            // The operation was not sucessfull hence free image and texture
-//            ilDeleteImages(1, &imageID);
-//            tellWindowToClose();
-//            return 0;
-//        }
-//
-//        ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
-//
-//        GLuint tid;
-//        glGenTextures(1, &tid);
-//        glBindTexture(GL_TEXTURE_2D, tid);
-//        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
-//                     GL_RGBA, GL_UNSIGNED_BYTE, ilGetData());
-//
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//
-//        glBindTexture(GL_TEXTURE_2D, 0);
-//
-//        /* Because we have already copied image data into texture data
-//        we can release memory used by image. */
-//
-//        ilDeleteImages(1, &imageID);
-//        fprintf(stdout, "Info: loadTexture: \"%s\" is ready\n", filename);
-//        return tid;
-//    } else {
-//        fprintf(stderr, "Error: loadTexture: DevIL is not setup\n");
-//        tellWindowToClose();
-//        return 0;
-//    }
-//}
+GLuint loadTexture(const char* filename) {
+  int width, height;
+  stbi_uc *image = stbi_load(filename, &width, &height, nullptr, 4);
+  if (image == nullptr) {
+    SPDLOG_ERROR(spdlog::fmt_lib::format("Couldn't load texture file \"{}\"", filename));
+    tellWindowToClose();
+    return 0;
+  }
+  GLuint tid;
+  glGenTextures(1, &tid);
+  glBindTexture(GL_TEXTURE_2D, tid);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, image);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  /* Because we have already copied image data into texture data
+  we can release memory used by image. */
+
+  stbi_image_free(image);
+  SPDLOG_INFO(spdlog::fmt_lib::format("Texture \"{}\" is ready", filename));
+  return tid;
+}
 
 /**
  * Load Cube Map Texture
