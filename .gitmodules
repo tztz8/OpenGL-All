@@ -1,0 +1,15 @@
+[submodule "exernalLibraries/glfw"]
+	path = exernalLibraries/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "exernalLibraries/imgui"]
+	path = exernalLibraries/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "exernalLibraries/spdlog"]
+	path = exernalLibraries/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "exernalLibraries/glm"]
+	path = exernalLibraries/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "exernalLibraries/glew"]
+	path = exernalLibraries/glew
+	url = https://github.com/nigels-com/glew.git
