@@ -26,6 +26,11 @@
 // #define STB_IMAGE_IMPLEMENTATION
 // #include <stb_image.h>
 
+// ImGUI lib
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 // Math Lib
 #define GLM_FORCE_RADIANS
 #include <glm/vec4.hpp>
@@ -67,7 +72,7 @@ GLint glScreenWidth, glScreenHeight;
 bool freeGLUTSizeUpdate;
 
 // title info
-#define TITLE_LENGTH 100
+std::string orginal_title("GLFW - OpengGL-All");
 
 /**
  * description on what the keyboard key used for <br>
@@ -79,10 +84,13 @@ std::map<char, std::string> keyDescription;
 
 //      --- predef methons ---
 void setupLogger(int argc, char** argv);
+static void glfw_error_callback(int error, const char* description);
+void setupImGUI();
 void windowSizeChangeCallback([[maybe_unused]] GLFWwindow* thisWindow, int width, int height);
 void updateAngle(GLfloat deltaTime);
 void keyboard(bool setDiscrption);
 void Display();
+void ImGUIDisplay();
 void Initialize();
 
 Sphere* sphere;
@@ -103,6 +111,7 @@ int main(int argc, char* argv[]) {
     SPDLOG_INFO("#####################");
     // Initialise GLFW
     SPDLOG_INFO("Initialise GLFW");
+    glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
         SPDLOG_ERROR("initializing GLFW failed");
         return EXIT_FAILURE;
@@ -121,9 +130,7 @@ int main(int argc, char* argv[]) {
 
     // Open a window and create its OpenGL context
     SPDLOG_INFO("Open a window and create its OpenGL context");
-    char orginal_title[TITLE_LENGTH];
-    strcpy(orginal_title, "GLFW - OpengGL-All - Bonus");
-    window = glfwCreateWindow(screenWidth, screenHeight, orginal_title, nullptr, nullptr);
+    window = glfwCreateWindow(screenWidth, screenHeight, orginal_title.c_str(), nullptr, nullptr);
     if (window == nullptr) {
         SPDLOG_ERROR("Failed to open GLFW window");
         glfwTerminate();
@@ -150,19 +157,6 @@ int main(int argc, char* argv[]) {
     }
 
     // icon
-    // SPDLOG_INFO("Setup icon for the window");
-    // GLFWimage icons[1];
-    // icons[0].pixels = stbi_load(
-    //         "res/icon/Timbre-Logo_O.png",
-    //         &icons[0].width,
-    //         &icons[0].height,
-    //         nullptr, 4);
-    // if (icons[0].pixels == nullptr) {
-    //     SPDLOG_ERROR("Unable to load icon");
-    // } else {
-    //     glfwSetWindowIcon(window, 1, icons);
-    //     stbi_image_free(icons[0].pixels);
-    // }
     loadGLFWIcon(window, "res/icon/Timbre-Logo_O.png");
 
     // Initialize GLEW
@@ -187,6 +181,9 @@ int main(int argc, char* argv[]) {
         SPDLOG_ERROR("OpenGL Debug Fall to initialize");
     }
 #endif
+
+    SPDLOG_INFO("Setting up IMGUI");
+    setupImGUI();
 
     SPDLOG_INFO("setting up some variables for Initialize");
     Sphere mainSphere(64);
@@ -266,13 +263,6 @@ int main(int argc, char* argv[]) {
             }
         }
 
-
-        // Render
-        Display();
-
-        // Swap buffers
-        glfwSwapBuffers(window);
-
         // Get evens (ex user input)
         glfwPollEvents();
 
@@ -282,14 +272,35 @@ int main(int argc, char* argv[]) {
         // check for user input
         keyboard(false);
 
+        // ImGui
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGUIDisplay();
+
+        // Render
+        ImGui::Render();
+        Display();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // Swap buffers
+        glfwSwapBuffers(window);
+
         // update data (often angles of things)
         updateAngle(deltaTime);
 
     }
     SPDLOG_INFO(spdlog::fmt_lib::format("Exit Window Loop, Avg FPS: {:0f}", avgFPS));
 
+    // ImGUI Cleanup
+    SPDLOG_INFO("Cleanup ImGUI");
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     // Close OpenGL window and terminate GLFW
-    SPDLOG_INFO("Close OpenGL window and terminate GLFW");
+    SPDLOG_INFO("Close GLFW window and terminate GLFW");
+    glfwDestroyWindow(window);
     glfwTerminate();
 
     SPDLOG_INFO("Shutdown spdlog");
@@ -319,6 +330,51 @@ void setupLogger(int argc, char* argv[]) {
     spdlog::set_level(spdlog::level::trace);
 }
 
+void setupImGUI() {
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup Dear ImGui styleis:issue is:open
+//    ImGui::StyleColorsDark();
+    ImGui::StyleColorsClassic();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 130");
+
+    // Set High DPI scale factor;
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    float xscale, yscale;
+    glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+    io.DisplayFramebufferScale = ImVec2(xscale, yscale);
+    ImGui::GetStyle().ScaleAllSizes(xscale);
+    ImFontConfig cfg;
+    cfg.SizePixels = 13.0f * xscale;
+
+    // Load Fonts
+    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
+    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
+    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
+    // - Read 'docs/FONTS.md' for more instructions and details.
+    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
+    io.Fonts->AddFontDefault(&cfg);
+    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
+    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
+    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
+    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
+    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    //IM_ASSERT(font != NULL);
+}
+
+static void glfw_error_callback(int error, const char* description) {
+    SPDLOG_ERROR(spdlog::fmt_lib::format("Glfw Error {}: {}", error, description));
+}
+
 
 // Window GL variables
 /**
@@ -331,7 +387,7 @@ GLfloat aspect = float(screenWidth) / float(screenHeight);
 /**
  * Flag if to stop the rotate of the camera around the object
  */
-bool stop_rotate = false;
+bool stop_rotate = true;
 /**
  * Flag to show the lines (not fill the trinalges)
  */
@@ -420,7 +476,7 @@ GLint material_shininess_loc;
 /**
  * Angle used for rotating the view (camera)
  */
-GLfloat rotateAngle = 0.0f;
+GLfloat rotateAngle = 180.0f;
 
 // Texture ID's
 GLuint earthTexID;
@@ -489,6 +545,79 @@ void Initialize(){
     sphere->create();
 }
 
+bool show_demo_window = false;
+ImVec4 clear_color = ImVec4(0.0f, (170.0f/255.0f), 1.0f, 1.0f);
+bool p_open = true;
+
+void ImGUIDisplay() {
+    static int counter = 0;
+    if (show_demo_window) {
+        ImGui::ShowDemoWindow(&show_demo_window);
+        if (!show_demo_window) {
+            counter = 0;
+        }
+    }
+
+    if(p_open) {
+        ImGuiWindowFlags window_flags = 0;
+
+        if(!ImGui::Begin(orginal_title.c_str(), &p_open, window_flags)) {
+            // Early out if the window is collapsed, as an optimization.
+            ImGui::End();
+            return;
+        }
+
+        // Menu Bar
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("Menu"))
+            {
+                ImGui::MenuItem("(demo menu)", NULL, false, false);
+                if (ImGui::MenuItem("Quit", "Alt+F4")) {
+                    SPDLOG_INFO("ImGui, user tell window to close");
+                    tellWindowToClose();
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+
+        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+        ImGui::Checkbox("Stop Rotate camera", &stop_rotate);      // Edit bools storing our window open/close state
+        ImGui::Checkbox("Top view camera", &top_view_flag);
+
+        ImGui::SliderFloat("camera rotate angle", &rotateAngle, 0.0f, 360.0f);
+        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+            counter++;
+        ImGui::SameLine();
+        ImGui::Text("counter = %d", counter);
+        if (counter > 0) {
+            show_demo_window = true;
+        }
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+        ImGui::End();
+    } else {
+        ImGui::Begin("Quiting");
+        ImGui::Text("Are you sure?");
+        if (ImGui::Button("Quit")) {
+            tellWindowToClose();
+            SPDLOG_INFO("User used ImGui to quit program");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reopen GUI")) {
+            p_open = true;
+            SPDLOG_INFO("User reopen ImGui");
+        }
+        ImGui::End();
+    }
+
+
+}
+
 /**
  * Called for every frame to draw on the screen
  */
@@ -498,6 +627,7 @@ void Display() {
         glViewport(0, 0, glScreenWidth, glScreenHeight);
         freeGLUTSizeUpdate = false;
     }
+    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -699,6 +829,12 @@ void updateAngle(GLfloat deltaTime) {
 
     if (!stop_rotate) {
         rotateAngle -= 2.75f * 10 * deltaTime;
+        if (rotateAngle < 0.0f) {
+            rotateAngle = 360.0f;
+        }
+        if (rotateAngle > 360.0f) {
+            rotateAngle = 0.0f;
+        }
     }
 
 }
