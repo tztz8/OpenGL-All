@@ -570,3 +570,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+### ImGui
+imgui.ini

@@ -376,6 +376,8 @@ static void glfw_error_callback(int error, const char* description) {
 }
 
 
+std::vector<std::filesystem::path> shaderPaths = {"res/shaders/shader.frag", "res/shaders/shader.vert"};
+
 // Window GL variables
 /**
  * Aspect ratio <br>
@@ -400,6 +402,8 @@ bool show_line_new = false;
  * Move the camera to look from above and change rotate to rotate the up vector
  */
 bool top_view_flag = false;
+
+ImVec4 clear_color = ImVec4(0.0f, (170.0f/255.0f), 1.0f, 1.0f);
 
 // GL loc
 /**
@@ -522,7 +526,7 @@ void setUniformLocations(GLuint shaderProgram) {
 void Initialize(){
 
     // Create the program for rendering the model
-    program = initShaders({"res/shaders/shader.frag", "res/shaders/shader.vert"});
+    program = initShaders(shaderPaths);
 
     // Check if making the shader work or not // This is not in FreeGLUT as does need an exit flag
     if (exitWindowFlag) {
@@ -536,7 +540,7 @@ void Initialize(){
     setUniformLocations(program);
 
     // Set Clear Color (background color)
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 
     earthTexID = loadTexture("res/textures/Earth.jpg");
 
@@ -546,7 +550,6 @@ void Initialize(){
 }
 
 bool show_demo_window = false;
-ImVec4 clear_color = ImVec4(0.0f, (170.0f/255.0f), 1.0f, 1.0f);
 bool p_open = true;
 
 void ImGUIDisplay() {
@@ -582,12 +585,15 @@ void ImGUIDisplay() {
             ImGui::EndMenuBar();
         }
 
-        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+//        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
         ImGui::Checkbox("Stop Rotate camera", &stop_rotate);      // Edit bools storing our window open/close state
         ImGui::Checkbox("Top view camera", &top_view_flag);
 
         ImGui::SliderFloat("camera rotate angle", &rotateAngle, 0.0f, 360.0f);
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+        if (ImGui::ColorEdit4("clear color", (float*)&clear_color)) {
+            glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        }// Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
             counter++;
@@ -595,6 +601,13 @@ void ImGUIDisplay() {
         ImGui::Text("counter = %d", counter);
         if (counter > 0) {
             show_demo_window = true;
+        }
+
+        if (ImGui::Button("Reload Shaders")) {
+            SPDLOG_INFO("Reload Shaders");
+            glDeleteProgram(program);
+            program = initShaders(shaderPaths);
+            setUniformLocations(program);
         }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -627,7 +640,6 @@ void Display() {
         glViewport(0, 0, glScreenWidth, glScreenHeight);
         freeGLUTSizeUpdate = false;
     }
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
