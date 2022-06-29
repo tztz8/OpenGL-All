@@ -181,7 +181,7 @@ void loadGLFWIcon(GLFWwindow* thisWindow, const std::filesystem::path iconFileNa
     SPDLOG_INFO(spdlog::fmt_lib::format("Setup icon \"{}\" for the window", iconFileNamePath.filename().string()));
     GLFWimage icons[1];
     icons[0].pixels = stbi_load(
-            iconFileNamePath.c_str(),
+            iconFileNamePath.string().c_str(),
             &icons[0].width,
             &icons[0].height,
             nullptr, 4);

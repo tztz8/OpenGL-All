@@ -7,6 +7,7 @@
 
 // Include GLEW
 #include <GL/glew.h>
+#pragma comment(lib, "opengl32.lib")
 // Include GLFW
 #include <GLFW/glfw3.h>
 
