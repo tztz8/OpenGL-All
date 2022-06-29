@@ -54,6 +54,7 @@ set(executable_name OpenGL-ALL)
 include_directories(include exernalLibraries/stb)
 
 add_executable(${executable_name}
+        res/icon/programIcon.rc
         src/main.cpp
         src/OpenGLHelperMethods.cpp
         src/Sphere.cpp)
