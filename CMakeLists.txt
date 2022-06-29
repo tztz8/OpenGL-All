@@ -73,4 +73,7 @@ endif()
 
 # NOTE I do not have a mac to tests with
 # external include folders
-target_include_directories(${executable_name} PRIVATE exernalLibraries/stb ${IMGUI_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR}/backends)
+target_include_directories(${executable_name} PRIVATE
+        exernalLibraries/portable-file-dialogs
+        exernalLibraries/stb
+        ${IMGUI_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR}/backends)

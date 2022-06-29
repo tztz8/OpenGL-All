@@ -20,6 +20,8 @@
 
 #define OPENGL_DEBUG_FOR_GLFW true
 
+std::filesystem::path UserSelectImageFile();
+
 /**
  * Read A file and out put a file a char list
  * @note code from Yasmin and commit and some modification make by Timbre Freeman

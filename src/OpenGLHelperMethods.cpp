@@ -19,6 +19,15 @@
 
 #include "main.h"
 
+#include <portable-file-dialogs.h>
+
+std::filesystem::path UserSelectImageFile() {
+    std::vector<std::string> selection = pfd::open_file("Select a Image File", ".",
+                   {"Image FileS", "*.png *.jpg *.jpeg *.bmp *.tga *.psd *.gif *.hdr *.pic"}).result();
+    SPDLOG_INFO(spdlog::fmt_lib::format("User Select Image File \"{}\"", selection[0]));
+    return std::filesystem::path(selection[0]);
+}
+
 /**
  * Read A file and out put a file a char list
  * @note code from Yasmin and commit and some modification make by Timbre Freeman
@@ -159,7 +168,6 @@ GLuint initShaders(const std::filesystem::path s[], int count) {
     return p;
 
 }
-
 
 /**
  * Initialize Shaders

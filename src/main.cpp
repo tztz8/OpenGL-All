@@ -596,6 +596,11 @@ void ImGUIDisplay() {
             glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         }// Edit 3 floats representing a color
 
+        if (ImGui::Button("Select new texture image file")) {
+            glDeleteTextures(1,&earthTexID);
+            earthTexID = loadTexture(UserSelectImageFile().string().c_str());
+        }
+
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
             counter++;
         ImGui::SameLine();

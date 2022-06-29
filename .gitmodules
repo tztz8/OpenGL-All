@@ -13,3 +13,6 @@
 [submodule "exernalLibraries/glew"]
 	path = exernalLibraries/glew
 	url = https://github.com/nigels-com/glew.git
+[submodule "exernalLibraries/portable-file-dialogs"]
+	path = exernalLibraries/portable-file-dialogs
+	url = https://github.com/samhocevar/portable-file-dialogs.git
