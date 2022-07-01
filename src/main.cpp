@@ -457,7 +457,7 @@ glm::vec4 material_ambient(0.9F, 0.9F, 0.9F, 1.0F);
 glm::vec4 material_diffuse(0.9F, 0.9F, 0.9F, 1.0F);
 glm::vec4 material_specular(0.9F, 0.9F, 0.9F, 1.0F);
 
-float material_shininess = 50.0;
+float material_shininess = 50.0F;
 glm::vec4 ambient_product = light_intensity * material_ambient;
 glm::vec4 diffuse_product = light_intensity * material_diffuse;
 glm::vec4 specular_product = light_intensity * material_specular;
@@ -572,6 +572,7 @@ void ImGUIDisplay() {
         }
 
         // Menu Bar
+        // TODO: find why it does not work (so far aaaaaaaaaaaaaaa)
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("Menu"))
@@ -586,20 +587,54 @@ void ImGUIDisplay() {
             ImGui::EndMenuBar();
         }
 
-//        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Stop Rotate camera", &stop_rotate);      // Edit bools storing our window open/close state
-        ImGui::Checkbox("Top view camera", &top_view_flag);
-
-        ImGui::SliderFloat("camera rotate angle", &rotateAngle, 0.0F, 360.0F);
-
-        if (ImGui::ColorEdit4("clear color", (float*)&clear_color)) {
-            glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-        }// Edit 3 floats representing a color
-
-        if (ImGui::Button("Select new texture image file")) {
-            glDeleteTextures(1,&earthTexID);
-            earthTexID = loadTexture(UserSelectImageFile().string().c_str());
+        if (ImGui::CollapsingHeader("Camera")) {
+            ImGui::Checkbox("Stop Rotate camera", &stop_rotate);      // Edit bools storing our window open/close state
+            ImGui::Checkbox("Top view camera", &top_view_flag);
+            ImGui::SliderFloat("camera rotate angle", &rotateAngle, 0.0F, 360.0F);
         }
+
+        if (ImGui::CollapsingHeader("Light Settings")) {
+            bool updateShader = false;
+            ImGui::DragFloat3("position", (float*)&light_position);
+            updateShader = ImGui::ColorEdit3("intensity", (float*)&light_intensity) || updateShader;
+            updateShader = ImGui::ColorEdit3("ambient", (float*)&material_ambient) || updateShader;
+            updateShader = ImGui::ColorEdit3("diffuse", (float*)&material_diffuse) || updateShader;
+            updateShader = ImGui::ColorEdit3("specular", (float*)&material_specular) || updateShader;
+            updateShader = ImGui::SliderFloat("shininess", &material_shininess, 0.0F, 70.0F) || updateShader;
+            if (updateShader) {
+                ambient_product = light_intensity * material_ambient;
+                diffuse_product = light_intensity * material_diffuse;
+                specular_product = light_intensity * material_specular;
+                setUniformLocations(program);
+            }
+        }
+
+        if (ImGui::CollapsingHeader("Window Settings")) {
+            bool fullScreenImGui = isFullScreen;
+            if (ImGui::Checkbox("Full Screen", &fullScreenImGui)) {
+                setFullScreen(fullScreenImGui);
+            }
+
+            if (ImGui::ColorEdit4("clear color", (float*)&clear_color)) {
+                glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+            }// Edit 3 floats representing a color
+        }
+
+        if (ImGui::CollapsingHeader("Graphics")) {
+            if (ImGui::Button("Select new texture image file")) {
+                glDeleteTextures(1,&earthTexID);
+                earthTexID = loadTexture(UserSelectImageFile().string().c_str());
+            }
+
+            if (ImGui::Button("Reload Shaders")) {
+                SPDLOG_INFO("Reload Shaders");
+                glDeleteProgram(program);
+                program = initShaders(shaderPaths);
+                setUniformLocations(program);
+            }
+        }
+
+        ImGui::Spacing();
 
         if (ImGui::Button("Button")){
             counter++;
@@ -608,13 +643,6 @@ void ImGUIDisplay() {
         ImGui::Text("counter = %d", counter);
         if (counter > 0) {
             show_demo_window = true;
-        }
-
-        if (ImGui::Button("Reload Shaders")) {
-            SPDLOG_INFO("Reload Shaders");
-            glDeleteProgram(program);
-            program = initShaders(shaderPaths);
-            setUniformLocations(program);
         }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0F / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
