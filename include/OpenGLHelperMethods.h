@@ -80,7 +80,7 @@ void loadGLFWIcon(GLFWwindow* thisWindow, const std::filesystem::path iconFileNa
  * @param filename path to image file
  * @return GL Texture ID
  */
-GLuint loadTexture(const char* filename);
+GLuint loadTexture(std::filesystem::path filename);
 
 /**
  * Load Cube Map Texture

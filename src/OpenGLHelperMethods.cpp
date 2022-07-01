@@ -73,11 +73,12 @@ std::string ReadFile(const std::filesystem::path& filename) {
 GLuint initShaders(const std::filesystem::path s[], int count) {
 
     GLuint p = glCreateProgram();
-    int i = 0;
+    size_t i = 0;
     GLuint v;
     std::string shaderType;
+    size_t size_t_count = static_cast<size_t>(count);
 
-    while (i < count) {
+    while (i < size_t_count) {
         std::string fileExtension = s[i].extension().string();
         if (fileExtension == ".vert" || fileExtension == ".vs") {
             v = glCreateShader(GL_VERTEX_SHADER);
@@ -231,11 +232,11 @@ GLuint generateAttachmentTexture() {
  * @param filename path to image file
  * @return GL Texture ID
  */
-GLuint loadTexture(const char* filename) {
+GLuint loadTexture(std::filesystem::path filename) {
   int width, height;
-  stbi_uc *image = stbi_load(filename, &width, &height, nullptr, 4);
+  stbi_uc *image = stbi_load(filename.string().c_str(), &width, &height, nullptr, 4);
   if (image == nullptr) {
-    SPDLOG_ERROR(spdlog::fmt_lib::format("Couldn't load texture file \"{}\"", filename));
+    SPDLOG_ERROR(spdlog::fmt_lib::format("Couldn't load texture file \"{}\"", filename.string()));
     tellWindowToClose();
     return 0;
   }
@@ -254,7 +255,7 @@ GLuint loadTexture(const char* filename) {
   we can release memory used by image. */
 
   stbi_image_free(image);
-  SPDLOG_INFO(spdlog::fmt_lib::format("Texture \"{}\" is ready", filename));
+  SPDLOG_INFO(spdlog::fmt_lib::format("Texture \"{}\" is ready", filename.filename().string()));
   return tid;
 }
 
@@ -368,6 +369,11 @@ void updateVertexTangents(const glm::vec4* vertices, const glm::vec3* normals, g
     glm::vec3* tan1 = (glm::vec3*)malloc(sizeof(glm::vec3) * numindices);
     glm::vec3* tan2 = (glm::vec3*)malloc(sizeof(glm::vec3) * numindices);
 
+    if (tan1 == nullptr || tan2 == nullptr) {
+        SPDLOG_ERROR("Unable to get memory to update vertex targets");
+        exit(EXIT_FAILURE);
+    }
+
     for (int k = 0; k < numindices; k++){
         tan1[k] = glm::vec3(0.0f, 0.0f, 0.0f);
         tan2[k] = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -439,6 +445,11 @@ void updateVertexTangents(const glm::vec4* vertices, const glm::vec3* normals, g
 
     glm::vec3* tan1 = (glm::vec3*)malloc(sizeof(glm::vec3) * numindices);
     glm::vec3* tan2 = (glm::vec3*)malloc(sizeof(glm::vec3) * numindices);
+
+    if (tan1 == nullptr || tan2 == nullptr) {
+        SPDLOG_ERROR("Unable to get memory to update vertex targets");
+        exit(EXIT_FAILURE);
+    }
 
     for (int k = 0; k < numindices; k++){
         tan1[k] = glm::vec3(0.0f, 0.0f, 0.0f);

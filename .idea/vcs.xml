@@ -6,6 +6,7 @@
     <mapping directory="$PROJECT_DIR$/exernalLibraries/glfw" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/exernalLibraries/glm" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/exernalLibraries/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/exernalLibraries/portable-file-dialogs" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/exernalLibraries/spdlog" vcs="Git" />
   </component>
 </project>

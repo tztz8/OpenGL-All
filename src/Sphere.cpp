@@ -22,7 +22,8 @@ Sphere::Sphere(int step) :
     step(step),
     numVertices((step + 1) * (step + 1)),
     numTriangles((2 * step * (step - 1))),
-    numIndices((6 * step * step))
+    numIndices((6 * step * step)),
+    sphere_vao(0) // setting 0 so it is initialized
     {
     // TODO: Debug
     SPDLOG_DEBUG(spdlog::fmt_lib::format("make using step: {}, numVertices: {}, numTriangles: {}, numIndices: {}, do not forget to call create",
@@ -47,7 +48,7 @@ void Sphere::create() {
 
     double theta = 0.0;
     double phi = 0.0;
-    int i = 0;
+    size_t i = 0;
 
     // Generate Vertices (Points)
     for (double b = -this->step / 2.0; b <= this->step / 2.0; b++) {
@@ -71,23 +72,24 @@ void Sphere::create() {
     // TODO: Debug
     SPDLOG_DEBUG(spdlog::fmt_lib::format("NumVertices: {}, i: {}", this->numVertices, i));
 
-    for (int j = 0; j < this->numVertices; ++j) {
+    size_t size_t_numVertices = static_cast<size_t>(this->numVertices);
+    for (size_t j = 0; j < size_t_numVertices; ++j) {
         // Generate Vertices (normal)
         normals[j] = glm::normalize(glm::vec3(points[j]));
     }
 
-    int index = 0;
-        for (int j = 0; j < (this->numVertices-this->step-1); j += this->step + 1) {
-            for (int k = j; k < (j + this->step); ++k) {
-                indices[index++] = k;
-                indices[index++] = k + this->step + 1;
-                indices[index++] = (k + 1) + this->step + 1;
+    size_t index = 0;
+    for (int j = 0; j < (this->numVertices-this->step-1); j += this->step + 1) {
+        for (int k = j; k < (j + this->step); ++k) {
+            indices[index++] = k;
+            indices[index++] = k + this->step + 1;
+            indices[index++] = (k + 1) + this->step + 1;
 
-                indices[index++] = k;
-                indices[index++] = (k + 1) + this->step + 1;
-                indices[index++] = k + 1;
-            }
+            indices[index++] = k;
+            indices[index++] = (k + 1) + this->step + 1;
+            indices[index++] = k + 1;
         }
+    }
 
     std::vector<glm::vec4> tangents(this->numVertices);
     updateVertexTangents(points.data(), normals.data(), tangents.data(),

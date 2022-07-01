@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     // Initialise GLFW
     SPDLOG_INFO("Initialise GLFW");
     glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit()) {
+    if (glfwInit() == GLFW_FALSE) {
         SPDLOG_ERROR("initializing GLFW failed");
         return EXIT_FAILURE;
     }
@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make macOS happy; should not be needed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 #if OPENGL_DEBUG_FOR_GLFW
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
 
     // Open a window and create its OpenGL context
@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
     // called to set the keys in keyboard map
     keyboard(true);
     // Go throw the map and print each key being used
-    for (std::pair<const char, std::string> node: keyDescription) {
+    for (std::pair<const char, std::string>& node: keyDescription) {
         if (isupper(node.first)) { // Use uppercase for normally Special cases like using shift or up arrow
             SPDLOG_INFO(spdlog::fmt_lib::format("Current Set Special Key: {} : Description: {}", node.first, node.second));
         } else {
@@ -218,10 +218,10 @@ int main(int argc, char* argv[]) {
     SPDLOG_INFO("setting up variables for the loop");
 
     // DeltaTime variables
-    GLfloat lastFrame = 0.0f;
+    GLfloat lastFrame = 0.0F;
 
     // FPS variables
-    GLfloat lastTimeFPS = 0.0f;
+    GLfloat lastTimeFPS = 0.0F;
     GLint numberOfFrames = 0;
     double fps;
     double avgFPS = 0.0;
@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
     SPDLOG_INFO(spdlog::fmt_lib::format("Start window loop with exit:{} and glfwWindowShouldClose(window):{}",
             exitWindowFlag ? "true" : "false",
             glfwWindowShouldClose(window) ? "true" : "false"));
-    while (!exitWindowFlag && !glfwWindowShouldClose(window)) {
+    while (!exitWindowFlag && glfwWindowShouldClose(window) == GLFW_FALSE) {
 
         // Calculate delta time
         GLfloat currentFrame;
@@ -242,10 +242,10 @@ int main(int argc, char* argv[]) {
         {
             GLfloat deltaTimeFPS = currentFrame - lastTimeFPS;
             numberOfFrames++;
-            if (deltaTimeFPS >= 1.0f) {
+            if (deltaTimeFPS >= 1.0F) {
                 fps = static_cast<double>(numberOfFrames) / deltaTimeFPS;
                 qtyFPS++;
-                avgFPS += (fps - avgFPS) / qtyFPS;
+                avgFPS += (fps - avgFPS) / static_cast<double>(qtyFPS);
 
                 std::string title(orginal_title);
                 title.append(" - [FPS: ");
@@ -354,7 +354,7 @@ void setupImGUI() {
     io.DisplayFramebufferScale = ImVec2(xscale, yscale);
     ImGui::GetStyle().ScaleAllSizes(xscale);
     ImFontConfig cfg;
-    cfg.SizePixels = 13.0f * xscale;
+    cfg.SizePixels = 13.0F * xscale;
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -384,7 +384,7 @@ std::vector<std::filesystem::path> shaderPaths = {"res/shaders/shader.frag", "re
  * Aspect ratio <br>
  * Proportion between the width and the height of the window
  */
-GLfloat aspect = float(screenWidth) / float(screenHeight);
+GLfloat aspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
 
 // Booleans for current state
 /**
@@ -404,7 +404,7 @@ bool show_line_new = false;
  */
 bool top_view_flag = false;
 
-ImVec4 clear_color = ImVec4(0.0f, (170.0f/255.0f), 1.0f, 1.0f);
+ImVec4 clear_color = ImVec4(0.0F, (170.0F/255.0F), 1.0F, 1.0F);
 
 // GL loc
 /**
@@ -432,12 +432,12 @@ GLuint programOne;
  * Camera matrix <br>
  * Use glm::lookAt to make
  */
-glm::mat4 view_matrix(1.0f);
+glm::mat4 view_matrix(1.0F);
 /**
  * 3d to 2d Matrix <br>
  * Normally using glm::perspective to make
  */
-glm::mat4 projection_matrix(1.0f);
+glm::mat4 projection_matrix(1.0F);
 /**
  * matrix to apply to things being dawn <br>
  * Often use at less one of these <br>
@@ -445,17 +445,17 @@ glm::mat4 projection_matrix(1.0f);
  *     - glm::translate <br>
  *     - glm::rotate <br>
  */
-glm::mat4 model_matrix(1.0f);
+glm::mat4 model_matrix(1.0F);
 
 // Add light components
 /**
  * Vector of where the light position in 3d world
  */
-glm::vec4 light_position(10.0f, 6.0f, 8.0f, 1.0f);
-glm::vec4 light_intensity(1.0f, 1.0f, 1.0f, 1.0f);
-glm::vec4 material_ambient(0.9f, 0.9f, 0.9f, 1.0f);
-glm::vec4 material_diffuse(0.9f, 0.9f, 0.9f, 1.0f);
-glm::vec4 material_specular(0.9f, 0.9f, 0.9f, 1.0f);
+glm::vec4 light_position(10.0F, 6.0F, 8.0F, 1.0F);
+glm::vec4 light_intensity(1.0F, 1.0F, 1.0F, 1.0F);
+glm::vec4 material_ambient(0.9F, 0.9F, 0.9F, 1.0F);
+glm::vec4 material_diffuse(0.9F, 0.9F, 0.9F, 1.0F);
+glm::vec4 material_specular(0.9F, 0.9F, 0.9F, 1.0F);
 
 float material_shininess = 50.0;
 glm::vec4 ambient_product = light_intensity * material_ambient;
@@ -481,7 +481,7 @@ GLint material_shininess_loc;
 /**
  * Angle used for rotating the view (camera)
  */
-GLfloat rotateAngle = 180.0f;
+GLfloat rotateAngle = 180.0F;
 
 // Texture ID's
 GLuint earthTexID;
@@ -535,7 +535,7 @@ void Initialize(){
     }
 
     // attribute indices
-    model_matrix = glm::mat4(1.0f);
+    model_matrix = glm::mat4(1.0F);
 
     // Use the shader program
     setUniformLocations(program);
@@ -590,7 +590,7 @@ void ImGUIDisplay() {
         ImGui::Checkbox("Stop Rotate camera", &stop_rotate);      // Edit bools storing our window open/close state
         ImGui::Checkbox("Top view camera", &top_view_flag);
 
-        ImGui::SliderFloat("camera rotate angle", &rotateAngle, 0.0f, 360.0f);
+        ImGui::SliderFloat("camera rotate angle", &rotateAngle, 0.0F, 360.0F);
 
         if (ImGui::ColorEdit4("clear color", (float*)&clear_color)) {
             glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
@@ -601,8 +601,9 @@ void ImGUIDisplay() {
             earthTexID = loadTexture(UserSelectImageFile().string().c_str());
         }
 
-        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+        if (ImGui::Button("Button")){
             counter++;
+        } // Buttons return true when clicked (most widgets return true when edited/activated)
         ImGui::SameLine();
         ImGui::Text("counter = %d", counter);
         if (counter > 0) {
@@ -616,7 +617,7 @@ void ImGUIDisplay() {
             setUniformLocations(program);
         }
 
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0F / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
         ImGui::End();
     } else {
@@ -666,29 +667,29 @@ void Display() {
     }
 
     // Set Point Size
-   glPointSize(10);
+    glPointSize(10.0F);
 
     // Set view matrix
     float rotateAngleRadians = glm::radians(rotateAngle);
     if (top_view_flag) { // Top View
         view_matrix = glm::lookAt(
-                glm::vec3(0.0, 10.0f, 0.0), // camera is at the top
-                glm::vec3(0, 0, 0), // look at the center
+                glm::vec3(0.0F, 10.0F, 0.0F), // camera is at the top
+                glm::vec3(0.0F, 0.0F, 0.0F), // look at the center
                 glm::vec3(
                         sinf(rotateAngleRadians),
-                        0.0f,
+                        0.0F,
                         cosf(rotateAngleRadians)
                 ) // rotating the camera
         );
     } else { // Normal View
         view_matrix = glm::lookAt(
                 glm::vec3(
-                        10.0f * sinf(rotateAngleRadians),
-                        0.0f,
-                        10.0f * cosf(rotateAngleRadians)
+                        10.0F * sinf(rotateAngleRadians),
+                        3.5F,
+                        10.0F * cosf(rotateAngleRadians)
                 ), // Moving around the center in a Center
-                glm::vec3(0, 0, 0), // look at the center
-                glm::vec3(0, 1, 0) // keeping the camera up
+                glm::vec3(0.0F, 0.0F, 0.0F), // look at the center
+                glm::vec3(0.0F, 1.0F, 0.0F) // keeping the camera up
         );
     }
     // Let opengl know about the change
@@ -700,17 +701,17 @@ void Display() {
    glUniform4fv(light_position_loc, 1, &light_position_camera[0]);
 
     // update projection matrix (useful when the window resize)
-    projection_matrix = glm::perspective(glm::radians(45.0f), aspect, 0.3f, 100.0f);
+    projection_matrix = glm::perspective(glm::radians(45.0F), aspect, 0.3F, 100.0F);
     glUniformMatrix4fv(projection_matrix_loc, 1, GL_FALSE, (GLfloat*)&projection_matrix[0]);
 
-    model_matrix = glm::mat4(1.0f);
+    model_matrix = glm::mat4(1.0F);
 
     // ---- Draw things ----
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, earthTexID);
-    model_matrix = glm::scale(model_matrix, glm::vec3(2.0f, 2.0f, 2.0f));
-    model_matrix = glm::rotate(model_matrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    model_matrix = glm::scale(model_matrix, glm::vec3(2.0F, 2.0F, 2.0F));
+    model_matrix = glm::rotate(model_matrix, glm::radians(180.0F), glm::vec3(1.0F, 0.0F, 0.0F));
     glUniformMatrix4fv(matrix_loc, 1, GL_FALSE, (GLfloat*)&model_matrix[0]);
     sphere->draw();
 
@@ -836,7 +837,7 @@ void windowSizeChangeCallback([[maybe_unused]] GLFWwindow* thisWindow, int width
     glScreenHeight = height;
     glScreenWidth = width;
     freeGLUTSizeUpdate = true;
-    aspect = float(glScreenWidth) / float(glScreenHeight);
+    aspect = static_cast<GLfloat>(glScreenWidth) / static_cast<GLfloat>(glScreenHeight);
 }
 
 /**
@@ -846,12 +847,12 @@ void windowSizeChangeCallback([[maybe_unused]] GLFWwindow* thisWindow, int width
 void updateAngle(GLfloat deltaTime) {
 
     if (!stop_rotate) {
-        rotateAngle -= 2.75f * 10 * deltaTime;
-        if (rotateAngle < 0.0f) {
-            rotateAngle = 360.0f;
+        rotateAngle -= 2.75F * 10.0F * deltaTime;
+        if (rotateAngle < 0.0F) {
+            rotateAngle = 360.0F;
         }
-        if (rotateAngle > 360.0f) {
-            rotateAngle = 0.0f;
+        if (rotateAngle > 360.0F) {
+            rotateAngle = 0.0F;
         }
     }
 
