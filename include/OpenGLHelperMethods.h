@@ -22,6 +22,8 @@
 
 std::filesystem::path UserSelectImageFile();
 
+void HelpMarker(const char* desc);
+
 /**
  * Read A file and out put a file a char list
  * @note code from Yasmin and commit and some modification make by Timbre Freeman

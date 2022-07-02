@@ -13,10 +13,10 @@
 class Sphere {
 private:
     unsigned int sphere_vao;
-    const int step;
-    const int numVertices;
-    const int numTriangles;
-    const int numIndices;
+    int step;
+    int numVertices;
+    int numTriangles;
+    int numIndices;
 public:
     /**
      * Make a class with a setNumber of step (detile of the sphere)
@@ -36,6 +36,8 @@ public:
      * @see glewInit()
      */
     void create();
+    void updateStep(int step);
+    int getStep();
 };
 
 

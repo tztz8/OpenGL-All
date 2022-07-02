@@ -142,3 +142,21 @@ void Sphere::draw() {
     glDrawElements(GL_TRIANGLES, this->numIndices, GL_UNSIGNED_SHORT, 0);
 //    glDrawArrays(GL_POINTS, 0, NUMVERTICES);
 }
+
+void Sphere::updateStep(int step) {
+    glDeleteVertexArrays(1, &this->sphere_vao);
+    this->step = step,
+    this->numVertices = ((step + 1) * (step + 1));
+    this->numTriangles = ((2 * step * (step - 1)));
+    this->numIndices = ((6 * step * step));
+    SPDLOG_DEBUG(spdlog::fmt_lib::format("make using step: {}, numVertices: {}, numTriangles: {}, numIndices: {}, do not forget to call create",
+                                         this->step,
+                                         this->numVertices,
+                                         this->numTriangles,
+                                         this->numIndices));
+    this->create();
+}
+
+int Sphere::getStep() {
+    return this->step;
+}

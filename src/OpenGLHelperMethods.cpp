@@ -21,11 +21,33 @@
 
 #include <portable-file-dialogs.h>
 
+#include "imgui.h"
+
 std::filesystem::path UserSelectImageFile() {
-    std::vector<std::string> selection = pfd::open_file("Select a Image File", ".",
-                   {"Image FileS", "*.png *.jpg *.jpeg *.bmp *.tga *.psd *.gif *.hdr *.pic"}).result();
+    pfd::open_file fileBox("Select a Image File", ".",
+                           {"Image FileS", "*.png *.jpg *.jpeg *.bmp *.tga *.psd *.gif *.hdr *.pic"});
+    std::vector<std::string> selection = fileBox.result();
+    SPDLOG_INFO(spdlog::fmt_lib::format("Number of selected files {}", selection.size()));
+    if (selection.size() == 0) {
+        return std::filesystem::path("res/textures/Earth.jpg");
+    }
     SPDLOG_INFO(spdlog::fmt_lib::format("User Select Image File \"{}\"", selection[0]));
     return std::filesystem::path(selection[0]);
+}
+
+// Helper to display a little (?) mark which shows a tooltip when hovered.
+// In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
+void HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
 }
 
 /**
