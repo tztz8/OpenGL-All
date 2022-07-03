@@ -398,7 +398,8 @@ bool show_line = false;
 /**
  * Flag to show the lines with GL_CULL_FACE (not fill the trinalges)
  */
-bool show_line_new = false;
+bool cull_face = false;
+bool cull_face_back = false;
 /**
  * Move the camera to look from above and change rotate to rotate the up vector
  */
@@ -433,11 +434,15 @@ GLuint programOne;
  * Use glm::lookAt to make
  */
 glm::mat4 view_matrix(1.0F);
+float view_eye_radias = 10.0F;
+float view_eye_y = 3.5F;
+glm::vec3 view_center(0.0F, 0.0F, 0.0F);
 /**
  * 3d to 2d Matrix <br>
  * Normally using glm::perspective to make
  */
 glm::mat4 projection_matrix(1.0F);
+float fov = 45.0F;
 /**
  * matrix to apply to things being dawn <br>
  * Often use at less one of these <br>
@@ -613,11 +618,15 @@ void ImGUIDisplay() {
             ImGui::Checkbox("Stop Rotate camera", &stop_rotate);      // Edit bools storing our window open/close state
             ImGui::Checkbox("Top view camera", &top_view_flag);
             ImGui::SliderFloat("camera rotate angle", &rotateAngle, 0.0F, 360.0F);
+            ImGui::SliderFloat("Field of view", &fov, 0.0F, 180.0F);
+            ImGui::SliderFloat("Eye Hight", &view_eye_y, -75.0F, 75.0F);
+            ImGui::SliderFloat("Eye Radias", &view_eye_radias, 0.0F, 75.0F);
+            ImGui::DragFloat3("Eye Center", (float*)&view_center, 0.1F);
         }
 
         if (ImGui::CollapsingHeader("Light Settings")) {
             bool updateShader = false;
-            ImGui::DragFloat3("position", (float*)&light_position);
+            ImGui::DragFloat3("position", (float*)&light_position, 0.1F);
             updateShader = ImGui::ColorEdit3("intensity", (float*)&light_intensity) || updateShader;
             updateShader = ImGui::ColorEdit3("ambient", (float*)&material_ambient) || updateShader;
             updateShader = ImGui::ColorEdit3("diffuse", (float*)&material_diffuse) || updateShader;
@@ -754,7 +763,10 @@ void ImGUIDisplay() {
 
         if (ImGui::CollapsingHeader("Graphics")) {
             ImGui::Checkbox("Show lines", &show_line);
-            ImGui::Checkbox("Show lines (GL_CULL_FACE)", &show_line_new);
+            ImGui::Checkbox("GL_CULL_FACE", &cull_face);
+            if (cull_face) {
+                ImGui::Checkbox("GL_CULL_FACE back", &cull_face_back);
+            }
 
             int steps = sphere->getStep();
             if (ImGui::SliderInt("Sphere Steps", &steps, 3, 128)) {
@@ -821,14 +833,18 @@ void Display() {
 
     // Show Lines
     // Tell GL to use GL_CULL_FACE
-    if (show_line_new) {
+    if (cull_face) {
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        if (cull_face_back) {
+            glCullFace(GL_BACK);
+        } else {
+            glCullFace( GL_FRONT);
+        }
     } else {
         glDisable(GL_CULL_FACE);
     }
     // Tell to fill or use Lines (not to fill) for the triangles
-    if (show_line || show_line_new) {
+    if (show_line) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -841,8 +857,8 @@ void Display() {
     float rotateAngleRadians = glm::radians(rotateAngle);
     if (top_view_flag) { // Top View
         view_matrix = glm::lookAt(
-                glm::vec3(0.0F, 10.0F, 0.0F), // camera is at the top
-                glm::vec3(0.0F, 0.0F, 0.0F), // look at the center
+                (glm::vec3(0.0F, view_eye_radias, 0.0F) + view_center), // camera is at the top
+                view_center, // look at the center
                 glm::vec3(
                         sinf(rotateAngleRadians),
                         0.0F,
@@ -851,12 +867,12 @@ void Display() {
         );
     } else { // Normal View
         view_matrix = glm::lookAt(
-                glm::vec3(
-                        10.0F * sinf(rotateAngleRadians),
-                        3.5F,
-                        10.0F * cosf(rotateAngleRadians)
-                ), // Moving around the center in a Center
-                glm::vec3(0.0F, 0.0F, 0.0F), // look at the center
+                (glm::vec3(
+                        view_eye_radias * sinf(rotateAngleRadians),
+                        view_eye_y,
+                        view_eye_radias * cosf(rotateAngleRadians)
+                ) + view_center), // Moving around the center in a Center
+                view_center, // look at the center
                 glm::vec3(0.0F, 1.0F, 0.0F) // keeping the camera up
         );
     }
@@ -869,7 +885,7 @@ void Display() {
    glUniform4fv(light_position_loc, 1, &light_position_camera[0]);
 
     // update projection matrix (useful when the window resize)
-    projection_matrix = glm::perspective(glm::radians(45.0F), aspect, 0.3F, 100.0F);
+    projection_matrix = glm::perspective(glm::radians(fov), aspect, 0.3F, 100.0F);
     glUniformMatrix4fv(projection_matrix_loc, 1, GL_FALSE, (GLfloat*)&projection_matrix[0]);
 
     model_matrix = glm::mat4(1.0F);
@@ -913,15 +929,19 @@ void keyboard(bool setDiscrption) {
         tellWindowToClose();
     }
 
-    bool sKey = checkKey('s', GLFW_KEY_S);
-    bool shiftKeys = checkKey('S', GLFW_KEY_LEFT_SHIFT) || checkKey('S', GLFW_KEY_RIGHT_SHIFT);
     if (setDiscrption) keyDescription['s'] = "Show line view";
-    if (sKey && !shiftKeys) {
+    if (checkKey('s', GLFW_KEY_S)) {
         show_line = !show_line;
     }
-    if (setDiscrption) keyDescription['S'] = "(SHIFT S) Show Line view but let the gpu hide hidden lines";
-    if (sKey && shiftKeys) {
-        show_line_new = !show_line_new;
+
+    if (setDiscrption) keyDescription['x'] = "GL Cull Face back";
+    if (checkKey('x', GLFW_KEY_X)) {
+        cull_face_back = !cull_face_back;
+    }
+
+    if (setDiscrption) keyDescription['c'] = "GL Cull Face";
+    if (checkKey('c', GLFW_KEY_C)) {
+        cull_face = !cull_face;
     }
 
     if (setDiscrption) keyDescription['u'] = "Top view";
