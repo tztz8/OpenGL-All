@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
     setupImGUI();
 
     SPDLOG_INFO("setting up some variables for Initialize");
-    Sphere mainSphere(64);
+    Sphere mainSphere(32);
     sphere = &mainSphere;
 
     SPDLOG_INFO("Running Initialize method");
@@ -336,8 +336,8 @@ void setupImGUI() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui styleis:issue is:open
 //    ImGui::StyleColorsDark();
@@ -488,7 +488,10 @@ GLint material_shininess_loc;
  */
 GLfloat rotateAngle = 180.0F;
 
-
+glm::vec3 model_Scale(2.0F, 2.0F, 2.0F);
+GLfloat model_rotate_angle = 180.0F;
+glm::vec3 model_rotate_vector(1.0F, 0.0F, 0.0F);
+//std::vector
 
 // Texture ID's
 GLuint earthTexID;
@@ -557,10 +560,9 @@ void Initialize(){
     sphere->create();
 }
 
-bool show_demo_window = false;
-bool p_open = true;
-
 void ImGUIDisplay() {
+    static bool show_demo_window = false;
+    static bool p_open = true;
     static int counter = 0;
     if (show_demo_window) {
         ImGui::ShowDemoWindow(&show_demo_window);
@@ -768,6 +770,28 @@ void ImGUIDisplay() {
                 ImGui::Checkbox("GL_CULL_FACE back", &cull_face_back);
             }
 
+            static bool allSameScaleValue = true;
+            if (ImGui::Checkbox("Scale is all the same value", &allSameScaleValue)) {
+                if (allSameScaleValue) {
+                    float scale = model_Scale.x;
+                    model_Scale.x = scale;
+                    model_Scale.y = scale;
+                    model_Scale.z = scale;
+                }
+            }
+            if (allSameScaleValue) {
+                float scale = model_Scale.x;
+                if (ImGui::DragFloat("Model Scale", &scale, 0.001F)) {
+                    model_Scale.x = scale;
+                    model_Scale.y = scale;
+                    model_Scale.z = scale;
+                }
+            } else {
+                ImGui::DragFloat3("Model Scale", (float*)&model_Scale, 0.001F);
+            }
+            ImGui::SliderFloat("Model rotate angle", &model_rotate_angle, 0.0F, 360.0F);
+            ImGui::SliderFloat3("Model rotate vector", (float*)&model_rotate_vector, -1.0F, 1.0F);
+
             int steps = sphere->getStep();
             if (ImGui::SliderInt("Sphere Steps", &steps, 3, 128)) {
                 sphere->updateStep(steps);
@@ -871,7 +895,7 @@ void Display() {
                         view_eye_radias * sinf(rotateAngleRadians),
                         view_eye_y,
                         view_eye_radias * cosf(rotateAngleRadians)
-                ) + view_center), // Moving around the center in a Center
+                ) + view_center), // Moving around the center in a view Center
                 view_center, // look at the center
                 glm::vec3(0.0F, 1.0F, 0.0F) // keeping the camera up
         );
@@ -894,8 +918,8 @@ void Display() {
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, earthTexID);
-    model_matrix = glm::scale(model_matrix, glm::vec3(2.0F, 2.0F, 2.0F));
-    model_matrix = glm::rotate(model_matrix, glm::radians(180.0F), glm::vec3(1.0F, 0.0F, 0.0F));
+    model_matrix = glm::scale(model_matrix, model_Scale);
+    model_matrix = glm::rotate(model_matrix, glm::radians(model_rotate_angle), model_rotate_vector);
     glUniformMatrix4fv(matrix_loc, 1, GL_FALSE, (GLfloat*)&model_matrix[0]);
     sphere->draw();
 
