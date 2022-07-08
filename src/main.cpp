@@ -643,6 +643,43 @@ void ImGUIDisplay() {
         }
 
         if (ImGui::CollapsingHeader("Window Settings")) {
+
+            int windowPosX, windowPosY;
+            glfwGetWindowPos(window, &windowPosX, &windowPosY);
+            ImGui::Value("Window x pos", windowPosX);
+            ImGui::Value("Window y pos", windowPosY);
+            ImGui::Value("Window width", glScreenWidth);
+            ImGui::Value("Window height", glScreenHeight);
+            int numOfMonitors;
+            GLFWmonitor** monitors = glfwGetMonitors(&numOfMonitors);
+            for (int i = 0; i < numOfMonitors; ++i) {
+                if (ImGui::CollapsingHeader(glfwGetMonitorName(monitors[i]))) {
+                    ImGui::Value("Monitor i", i);
+                    const GLFWvidmode* mode = glfwGetVideoMode(monitors[i]);
+                    ImGui::Value("Monitor refreshRate", mode->refreshRate);
+                    ImGui::Value("Monitor width", mode->width);
+                    ImGui::Value("Monitor height", mode->height);
+                    int monitorPosX, monitorPosY;
+                    glfwGetMonitorPos(monitors[i], &monitorPosX, &monitorPosY);
+                    ImGui::Value("Monitor x pos", monitorPosX);
+                    ImGui::Value("Monitor y pos", monitorPosY);
+                    int monitorWidth, monitorHeight;
+                    glfwGetMonitorWorkarea(monitors[i], &monitorPosX, &monitorPosY, &monitorWidth, &monitorHeight);
+                    ImGui::Value("Monitor Work-area width", monitorWidth);
+                    ImGui::Value("Monitor Work-area height", monitorHeight);
+                    ImGui::Value("Monitor Work-area x pos", monitorPosX);
+                    ImGui::Value("Monitor Work-area y pos", monitorPosY);
+                    float monitorScaleX, monitorScaleY;
+                    glfwGetMonitorContentScale(monitors[i], &monitorScaleX, &monitorScaleY);
+                    ImGui::Value("Monitor x scale", monitorScaleX);
+                    ImGui::Value("Monitor y scale", monitorScaleY);
+                    int monitorPhysicalSizeWidth, monitorPhysicalSizeHeight;
+                    glfwGetMonitorPhysicalSize(monitors[i], &monitorPhysicalSizeWidth, &monitorPhysicalSizeHeight);
+                    ImGui::Value("Monitor physical size width", monitorPhysicalSizeWidth);
+                    ImGui::Value("Monitor physical size height", monitorPhysicalSizeHeight);
+                }
+            }
+
             bool fullScreenImGui = isFullScreen;
             if (ImGui::Checkbox("Full Screen", &fullScreenImGui)) {
                 setFullScreen(fullScreenImGui);
@@ -1003,6 +1040,8 @@ bool checkKey(char key, int GLFW_key) {
 
 int windowPosAtFullScreenX = 0;
 int windowPosAtFullScreenY = 0;
+int windowWidthAtFullScreen = 0;
+int windowHeightAtFullScreen = 0;
 
 /**
  * check window to be fullscreen
@@ -1015,7 +1054,7 @@ void setFullScreen(bool isFullScreenIn) {
     if (!isFullScreenIn) {
         // auto unhide cursor when leaving full screen
         //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        glfwSetWindowMonitor( window, nullptr,  windowPosAtFullScreenX, windowPosAtFullScreenY, screenWidth, screenHeight, 0 );
+        glfwSetWindowMonitor( window, nullptr,  windowPosAtFullScreenX, windowPosAtFullScreenY, windowWidthAtFullScreen, windowHeightAtFullScreen, 0 );
         isFullScreen = false;
         SPDLOG_INFO("Done setting to window (turn fullscreen off)");
     } else {
@@ -1027,9 +1066,12 @@ void setFullScreen(bool isFullScreenIn) {
             const GLFWvidmode * mode = glfwGetVideoMode(_monitor);
             // get the x and y of the window
             glfwGetWindowPos(window, &windowPosAtFullScreenX, &windowPosAtFullScreenY);
+            // set the screen size
+            windowHeightAtFullScreen = glScreenHeight;
+            windowWidthAtFullScreen = glScreenWidth;
 
             // switch to full screen
-            glfwSetWindowMonitor( window, _monitor, 0, 0, mode->width, mode->height, 0 );
+            glfwSetWindowMonitor( window, _monitor, 0, 0, mode->width, mode->height, mode->refreshRate );
             isFullScreen = true;
             SPDLOG_INFO("Done setting to fullscreen (turn fullscreen on)");
         } else {
