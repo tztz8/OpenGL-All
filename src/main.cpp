@@ -50,6 +50,7 @@
 #include "main.h"
 
 #include "Sphere.h"
+#include "Cube.h"
 
 //          --- Filled's ---
 // glfw window id
@@ -94,8 +95,16 @@ void Display();
 void ImGUIDisplay();
 void Initialize();
 
+enum class Models {
+    sphere,
+    cube
+};
+//const Models allModels[] = {Models::sphere, Models::cube};
+std::array<Models, 2> allModels = {Models::sphere, Models::cube};
+std::array<std::string, 2> allModelsNames = {"Sphere", "Cube"};
+Models select_model = Models::sphere;
 Sphere* sphere;
-
+Cube* cube;
 
 /**
  * Main - Start of the program
@@ -189,6 +198,8 @@ int main(int argc, char* argv[]) {
     SPDLOG_INFO("setting up some variables for Initialize");
     Sphere mainSphere(32);
     sphere = &mainSphere;
+    Cube mainCube{};
+    cube = &mainCube;
 
     SPDLOG_INFO("Running Initialize method");
     Initialize();
@@ -495,6 +506,8 @@ glm::vec3 model_rotate_vector(1.0F, 0.0F, 0.0F);
 
 // Texture ID's
 GLuint earthTexID;
+GLuint randomMadeTexID;
+GLuint cubeTexID;
 
 //          --- Methods ---
 
@@ -554,10 +567,13 @@ void Initialize(){
     glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 
     earthTexID = loadTexture("res/textures/Earth.jpg");
+    randomMadeTexID = loadTexture("res/textures/randomMade.png");
+    cubeTexID = loadTexture("res/textures/wests_textures/stone wall 9.png");
 
     // TODO: see why this is here
     // glEnable(GL_PROGRAM_POINT_SIZE);
     sphere->create();
+    cube->create();
 }
 
 void ImGUIDisplay() {
@@ -829,14 +845,30 @@ void ImGUIDisplay() {
             ImGui::SliderFloat("Model rotate angle", &model_rotate_angle, 0.0F, 360.0F);
             ImGui::SliderFloat3("Model rotate vector", (float*)&model_rotate_vector, -1.0F, 1.0F);
 
+            const char* models[allModels.size()];
+            int item = 0;
+            for (int i = 0; i < allModels.size(); ++i) {
+                models[i] = allModelsNames[i].c_str();
+                if (select_model == allModels[i]) {
+                    item = i;
+                }
+            }
+            ImGui::Combo("Model", &item, models, allModels.size());
+            select_model = allModels[item];
+
             int steps = sphere->getStep();
             if (ImGui::SliderInt("Sphere Steps", &steps, 3, 128)) {
                 sphere->updateStep(steps);
             }
 
-            if (ImGui::Button("Select new texture image file")) {
+            if (ImGui::Button("Select new earth texture image file")) {
                 glDeleteTextures(1,&earthTexID);
                 earthTexID = loadTexture(UserSelectImageFile().string().c_str());
+            }
+
+            if (ImGui::Button("Select new random texture image file")) {
+                glDeleteTextures(1,&randomMadeTexID);
+                randomMadeTexID = loadTexture(UserSelectImageFile().string().c_str());
             }
 
             if (ImGui::Button("Reload Shaders")) {
@@ -953,12 +985,46 @@ void Display() {
 
     // ---- Draw things ----
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, earthTexID);
+    switch (select_model) {
+        case Models::sphere:
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, earthTexID);
+            break;
+        case Models::cube:
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, cubeTexID);
+            break;
+    }
     model_matrix = glm::scale(model_matrix, model_Scale);
     model_matrix = glm::rotate(model_matrix, glm::radians(model_rotate_angle), model_rotate_vector);
     glUniformMatrix4fv(matrix_loc, 1, GL_FALSE, (GLfloat*)&model_matrix[0]);
-    sphere->draw();
+    switch (select_model) {
+        case Models::sphere:
+            sphere->draw();
+            break;
+        case Models::cube:
+            cube->draw();
+            break;
+    }
+
+    model_matrix = glm::mat4(1.0F);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, randomMadeTexID);
+    model_matrix = glm::translate(model_matrix, glm::vec3(light_position.x, light_position.y, light_position.z));
+    if (light_position.x == 0.0F && light_position.y == 0.0F && light_position.z == 0.0F) {
+        model_matrix = glm::mat4(1.0F);
+    }
+    glUniformMatrix4fv(matrix_loc, 1, GL_FALSE, (GLfloat*)&model_matrix[0]);
+    cube->draw();
+
+    model_matrix = glm::mat4(1.0F);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, randomMadeTexID);
+    model_matrix = glm::translate(model_matrix, view_center);
+    glUniformMatrix4fv(matrix_loc, 1, GL_FALSE, (GLfloat*)&model_matrix[0]);
+    cube->draw();
 
     // ---- End of Draw things ----
     glFlush();

@@ -55,9 +55,10 @@ include_directories(include exernalLibraries/stb)
 
 add_executable(${executable_name}
         res/icon/programIcon.rc
-        src/main.cpp
-        src/OpenGLHelperMethods.cpp
-        src/Sphere.cpp)
+        src/main.cpp include/main.h
+        src/OpenGLHelperMethods.cpp include/OpenGLHelperMethods.h
+        src/Sphere.cpp include/Sphere.h
+        src/Cube.cpp include/Cube.h)
 
 if (UNIX AND NOT APPLE) # Linux
     target_link_libraries(${executable_name} glm glfw -lGL -lGLEW spdlog::spdlog imgui)
