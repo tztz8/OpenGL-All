@@ -90,7 +90,7 @@ static void glfw_error_callback(int error, const char* description);
 void setupImGUI();
 void windowSizeChangeCallback([[maybe_unused]] GLFWwindow* thisWindow, int width, int height);
 void updateAngle(GLfloat deltaTime);
-void keyboard(bool setDiscrption);
+void keyboard(bool setDiscrption, GLfloat deltaTime);
 void Display();
 void ImGUIDisplay();
 void Initialize();
@@ -216,7 +216,7 @@ int main(int argc, char* argv[]) {
 
     // List Keys being used
     // called to set the keys in keyboard map
-    keyboard(true);
+    keyboard(true, 0.0F);
     // Go throw the map and print each key being used
     for (std::pair<const char, std::string>& node: keyDescription) {
         if (isupper(node.first)) { // Use uppercase for normally Special cases like using shift or up arrow
@@ -282,7 +282,7 @@ int main(int argc, char* argv[]) {
         exitWindowFlag = glfwGetKey(window, GLFW_KEY_ESCAPE ) == GLFW_PRESS || exitWindowFlag;
 
         // check for user input
-        keyboard(false);
+        keyboard(false, deltaTime);
 
         // ImGui
         ImGui_ImplOpenGL3_NewFrame();
@@ -462,6 +462,8 @@ float fov = 45.0F;
  *     - glm::rotate <br>
  */
 glm::mat4 model_matrix(1.0F);
+
+float movingScale = 1.5F;
 
 // Add light components
 /**
@@ -694,6 +696,11 @@ void ImGUIDisplay() {
                     ImGui::Value("Monitor physical size width", monitorPhysicalSizeWidth);
                     ImGui::Value("Monitor physical size height", monitorPhysicalSizeHeight);
                 }
+            }
+
+            static bool fameLimit = true;
+            if (ImGui::Checkbox("vsync (frame limit)", &fameLimit)) {
+                glfwSwapInterval(fameLimit);
             }
 
             bool fullScreenImGui = isFullScreen;
@@ -1050,19 +1057,19 @@ std::map<char, bool> keyCurrentlyPressed;
 /**
  * On each frame it check for user input to toggle a flag
  */
-void keyboard(bool setDiscrption) {
+void keyboard(bool setDiscrption, GLfloat deltaTime) {
     if (setDiscrption) keyDescription['q'] = "Quit program";
     if (checkKey('q', GLFW_KEY_Q)) {
         tellWindowToClose();
     }
 
-    if (setDiscrption) keyDescription['s'] = "Show line view";
-    if (checkKey('s', GLFW_KEY_S)) {
+    if (setDiscrption) keyDescription['x'] = "Show line view";
+    if (checkKey('x', GLFW_KEY_X)) {
         show_line = !show_line;
     }
 
-    if (setDiscrption) keyDescription['x'] = "GL Cull Face back";
-    if (checkKey('x', GLFW_KEY_X)) {
+    if (setDiscrption) keyDescription['z'] = "GL Cull Face back";
+    if (checkKey('z', GLFW_KEY_Z)) {
         cull_face_back = !cull_face_back;
     }
 
@@ -1085,6 +1092,25 @@ void keyboard(bool setDiscrption) {
     if (setDiscrption) keyDescription['F'] = "(F11) Full Screen";
     if (checkKey('F', GLFW_KEY_F11)) {
         setFullScreen(!isFullScreen);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_W)) {
+        view_center.z += movingScale * deltaTime;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S)) {
+        view_center.z -= movingScale * deltaTime;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D)) {
+        view_center.x -= movingScale * deltaTime;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A)) {
+        view_center.x += movingScale * deltaTime;
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP)) {
+        view_center.y += movingScale * deltaTime;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN)) {
+        view_center.y -= movingScale * deltaTime;
     }
 }
 
