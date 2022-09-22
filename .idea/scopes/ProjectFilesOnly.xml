@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="ProjectFilesOnly" pattern="file[OpenGL-All]:include//*||file[OpenGL-All]:src/*||file:CMakeLists.txt||file[OpenGL-All]:res/shaders//*" />
+</component>

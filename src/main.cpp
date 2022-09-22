@@ -45,7 +45,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "spdlog/sinks/rotating_file_sink.h"
 
-// OpenGL Hellper Methons
+// OpenGL Helper Methods
 #include "OpenGLHelperMethods.h"
 #include "main.h"
 
@@ -74,7 +74,7 @@ GLint glScreenWidth, glScreenHeight;
 bool freeGLUTSizeUpdate;
 
 // title info
-std::string orginal_title("GLFW - OpengGL-All");
+std::string original_title("GLFW - OpenGL-All");
 
 /**
  * description on what the keyboard key used for <br>
@@ -84,13 +84,13 @@ std::string orginal_title("GLFW - OpengGL-All");
  */
 std::map<char, std::string> keyDescription;
 
-//      --- predef methons ---
+//      --- pre-def methods ---
 void setupLogger(int argc, char** argv);
 static void glfw_error_callback(int error, const char* description);
 void setupImGUI();
 void windowSizeChangeCallback([[maybe_unused]] GLFWwindow* thisWindow, int width, int height);
 void updateAngle(GLfloat deltaTime);
-void keyboard(bool setDiscrption, GLfloat deltaTime);
+void keyboard(bool setDescription, GLfloat deltaTime);
 void Display();
 void ImGUIDisplay();
 void Initialize();
@@ -109,10 +109,10 @@ Cube* cube;
 /**
  * Main - Start of the program
  * @brief Main
- * @param argc number of argumnets
+ * @param argc number of arguments
  * @param argv pointer to the array of arguments
- * @note the first argument shude (TODO: fix spelling) alwasy be the program name
- * @return int the sussecuse (TODO: fix spelling) of the program
+ * @note the first argument should always be the program name
+ * @return int the success of the program
  */
 int main(int argc, char* argv[]) {
     setupLogger(argc, argv);
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 
     // Open a window and create its OpenGL context
     SPDLOG_INFO("Open a window and create its OpenGL context");
-    window = glfwCreateWindow(screenWidth, screenHeight, orginal_title.c_str(), nullptr, nullptr);
+    window = glfwCreateWindow(screenWidth, screenHeight, original_title.c_str(), nullptr, nullptr);
     if (window == nullptr) {
         SPDLOG_ERROR("Failed to open GLFW window");
         glfwTerminate();
@@ -197,9 +197,12 @@ int main(int argc, char* argv[]) {
 
     SPDLOG_INFO("setting up some variables for Initialize");
     Sphere mainSphere(32);
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "LocalValueEscapesScope"
     sphere = &mainSphere;
     Cube mainCube{};
     cube = &mainCube;
+#pragma clang diagnostic pop
 
     SPDLOG_INFO("Running Initialize method");
     Initialize();
@@ -258,14 +261,14 @@ int main(int argc, char* argv[]) {
                 qtyFPS++;
                 avgFPS += (fps - avgFPS) / static_cast<double>(qtyFPS);
 
-                std::string title(orginal_title);
+                std::string title(original_title);
                 title.append(" - [FPS: ");
 //                title.append(fmt::format("{:0f}, Avg:{:0f}", fps, avgFPS));
                 title.append(fmt::format("{:0f}", fps));
                 title.append("]");
 
 //                snprintf(title, TITLE_LENGTH - 1,
-//                         "%s - [FPS: %3.2f]", orginal_title,
+//                         "%s - [FPS: %3.2f]", original_title,
 //                         fps);
                 glfwSetWindowTitle(window, title.c_str());
                 //fprintf(stdout, "Info: FPS: %f\n", fps);
@@ -360,12 +363,12 @@ void setupImGUI() {
 
     // Set High DPI scale factor;
     GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-    float xscale, yscale;
-    glfwGetMonitorContentScale(monitor, &xscale, &yscale);
-    io.DisplayFramebufferScale = ImVec2(xscale, yscale);
-    ImGui::GetStyle().ScaleAllSizes(xscale);
+    float xScale, yScale;
+    glfwGetMonitorContentScale(monitor, &xScale, &yScale);
+    io.DisplayFramebufferScale = ImVec2(xScale, yScale);
+    ImGui::GetStyle().ScaleAllSizes(xScale);
     ImFontConfig cfg;
-    cfg.SizePixels = 13.0F * xscale;
+    cfg.SizePixels = 13.0F * xScale;
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -403,11 +406,11 @@ GLfloat aspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeig
  */
 bool stop_rotate = true;
 /**
- * Flag to show the lines (not fill the trinalges)
+ * Flag to show the lines (not fill the triangles)
  */
 bool show_line = false;
 /**
- * Flag to show the lines with GL_CULL_FACE (not fill the trinalges)
+ * Flag to show the lines with GL_CULL_FACE (not fill the triangles)
  */
 bool cull_face = false;
 bool cull_face_back = false;
@@ -613,7 +616,7 @@ void ImGUIDisplay() {
         if (no_bring_to_front)  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
         if (unsaved_document)   window_flags |= ImGuiWindowFlags_UnsavedDocument;
 
-        if(!ImGui::Begin(orginal_title.c_str(), &p_open, window_flags)) {
+        if(!ImGui::Begin(original_title.c_str(), &p_open, window_flags)) {
             // Early out if the window is collapsed, as an optimization.
             ImGui::End();
             return;
@@ -624,7 +627,7 @@ void ImGUIDisplay() {
         {
             if (ImGui::BeginMenu("Menu"))
             {
-                ImGui::MenuItem("(demo menu)", NULL, false, false);
+                ImGui::MenuItem("(demo menu)", nullptr, false, false);
                 if (ImGui::MenuItem("Quit", "Alt+F4")) {
                     SPDLOG_INFO("ImGui, user tell window to close");
                     tellWindowToClose();
@@ -1057,39 +1060,39 @@ std::map<char, bool> keyCurrentlyPressed;
 /**
  * On each frame it check for user input to toggle a flag
  */
-void keyboard(bool setDiscrption, GLfloat deltaTime) {
-    if (setDiscrption) keyDescription['q'] = "Quit program";
+void keyboard(bool setDescription, GLfloat deltaTime) {
+    if (setDescription) keyDescription['q'] = "Quit program";
     if (checkKey('q', GLFW_KEY_Q)) {
         tellWindowToClose();
     }
 
-    if (setDiscrption) keyDescription['x'] = "Show line view";
+    if (setDescription) keyDescription['x'] = "Show line view";
     if (checkKey('x', GLFW_KEY_X)) {
         show_line = !show_line;
     }
 
-    if (setDiscrption) keyDescription['z'] = "GL Cull Face back";
+    if (setDescription) keyDescription['z'] = "GL Cull Face back";
     if (checkKey('z', GLFW_KEY_Z)) {
         cull_face_back = !cull_face_back;
     }
 
-    if (setDiscrption) keyDescription['c'] = "GL Cull Face";
+    if (setDescription) keyDescription['c'] = "GL Cull Face";
     if (checkKey('c', GLFW_KEY_C)) {
         cull_face = !cull_face;
     }
 
-    if (setDiscrption) keyDescription['u'] = "Top view";
-    if (setDiscrption) keyDescription['t'] = "Top view";
+    if (setDescription) keyDescription['u'] = "Top view";
+    if (setDescription) keyDescription['t'] = "Top view";
     if (checkKey('t', GLFW_KEY_T) || checkKey('u', GLFW_KEY_U)) {
         top_view_flag = !top_view_flag;
     }
 
-    if (setDiscrption) keyDescription['r'] = "Rotate of camera";
+    if (setDescription) keyDescription['r'] = "Rotate of camera";
     if (checkKey('r', GLFW_KEY_R)) {
         stop_rotate = !stop_rotate;
     }
 
-    if (setDiscrption) keyDescription['F'] = "(F11) Full Screen";
+    if (setDescription) keyDescription['F'] = "(F11) Full Screen";
     if (checkKey('F', GLFW_KEY_F11)) {
         setFullScreen(!isFullScreen);
     }
