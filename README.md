@@ -26,3 +26,23 @@ A place to put all I lean of OpenGL but using Cpp insead of C
 - Header files [(include)](include)
 - Test sources [(test)](test)
   - TODO: add tests
+
+```mermaid
+classDiagram
+    Main <|-- Cube
+    Main <|-- Sphere
+    Main <|-- OpenGLHelperMethods
+    Cube <|-- OpenGLHelperMethods
+    Sphere <|-- OpenGLHelperMethods
+    class OpenGLHelperMethods {
+      +UserSelectImageFile()
+      +HelpMarker(char * desc)
+      +ReadFile(path & filename)
+      +initShaders(path s[], int count)
+      +initShaders(vector<path> & shaderPaths)
+      +generateAttachmentTexture()
+      +loadGLFWIcon(GLFWwindow* thisWindow, path iconFileNamePath)
+      +loadTexture(path filename)
+      +size int
+    }
+```
