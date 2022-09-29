@@ -57,6 +57,7 @@ add_executable(${executable_name}
         res/icon/programIcon.rc
         src/main.cpp include/main.h
         src/OpenGLHelperMethods.cpp include/OpenGLHelperMethods.h
+        src/ModelLoader.cpp include/ModelLoader.h
         src/Sphere.cpp include/Sphere.h
         src/Cube.cpp include/Cube.h)
 

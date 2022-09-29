@@ -572,3 +572,5 @@ $RECYCLE.BIN/
 
 ### ImGui
 imgui.ini
+
+!res/models/*.obj

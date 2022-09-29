@@ -47,6 +47,7 @@
 
 // OpenGL Helper Methods
 #include "OpenGLHelperMethods.h"
+#include "ModelLoader.h"
 #include "main.h"
 
 #include "Sphere.h"
@@ -97,14 +98,16 @@ void Initialize();
 
 enum class Models {
     sphere,
-    cube
+    cube,
+    wireframeOBJ
 };
 //const Models allModels[] = {Models::sphere, Models::cube};
-std::array<Models, 2> allModels = {Models::sphere, Models::cube};
-std::array<std::string, 2> allModelsNames = {"Sphere", "Cube"};
+std::array<Models, 3> allModels = {Models::sphere, Models::cube, Models::wireframeOBJ};
+std::array<std::string, 3> allModelsNames = {"Sphere", "Cube", "Wireframe OBJ"};
 Models select_model = Models::sphere;
 Sphere* sphere;
 Cube* cube;
+SimpleModel* wireframeOBJModel;
 
 /**
  * Main - Start of the program
@@ -513,6 +516,7 @@ glm::vec3 model_rotate_vector(1.0F, 0.0F, 0.0F);
 GLuint earthTexID;
 GLuint randomMadeTexID;
 GLuint cubeTexID;
+GLuint modelTexID;
 
 //          --- Methods ---
 
@@ -574,6 +578,15 @@ void Initialize(){
     earthTexID = loadTexture("res/textures/Earth.jpg");
     randomMadeTexID = loadTexture("res/textures/randomMade.png");
     cubeTexID = loadTexture("res/textures/wests_textures/stone wall 9.png");
+    modelTexID = loadTexture("res/textures/failsafe.png");
+
+    // load model
+    wireframeOBJModel = readOBJ("res/models/box.obj");
+    if (wireframeOBJModel == nullptr) {
+        // TODO: add
+    } else {
+        // TODO: add
+    }
 
     // TODO: see why this is here
     // glEnable(GL_PROGRAM_POINT_SIZE);
