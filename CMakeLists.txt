@@ -79,3 +79,5 @@ target_include_directories(${executable_name} PRIVATE
         exernalLibraries/portable-file-dialogs
         exernalLibraries/stb
         ${IMGUI_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR}/backends)
+
+set_property(TARGET OpenGL-ALL PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
