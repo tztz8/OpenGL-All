@@ -1017,6 +1017,9 @@ void Display() {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, cubeTexID);
             break;
+        case Models::wireframeOBJ:
+            // TODO: add 
+            break;
     }
     model_matrix = glm::scale(model_matrix, model_Scale);
     model_matrix = glm::rotate(model_matrix, glm::radians(model_rotate_angle), model_rotate_vector);
