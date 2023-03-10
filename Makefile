@@ -70,7 +70,7 @@ EFLAGS += -I $(STB_INCLUDE_DIR)
 PFD_INCLUDE_DIR = exernalLibraries/portable-file-dialogs
 EFLAGS += -I $(PFD_INCLUDE_DIR)
 
-# TODO: GLFW lib
+# GLFW lib
 $(BUILD_DIR)/glfw/src/libglfw3.a:
 	mkdir -p $(BUILD_DIR)/glfw
 	cmake -B build/glfw exernalLibraries/glfw
