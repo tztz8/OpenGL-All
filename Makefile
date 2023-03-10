@@ -5,7 +5,7 @@ OUT	= OpenGL-All
 CC	 = clang
 NVCC	 = nvcc
 FLAGS	 = -Wall -g -c -x c++ -Ofast
-EFLAGS	 = -I.
+EFLAGS	 := -I $(INCLUDE_DIR)
 CUDA_FLAGS	 = -g -c -O3
 LFLAGS	 = -lm build/glfw/src/libglfw3.a -lGL -lGLEW -lGLU
 
@@ -53,18 +53,22 @@ HEADS	+= exernalLibraries/imgui/backends/imgui_impl_glfw.h
 HEADS	+= exernalLibraries/imgui/backends/imgui_impl_opengl3.h
 IMGUI_INCLUDE1_DIR	= exernalLibraries/imgui
 IMGUI_INCLUDE2_DIR	= exernalLibraries/imgui/backends
+EFLAGS += -I $(IMGUI_INCLUDE1_DIR) -I $(IMGUI_INCLUDE2_DIR)
 
 # SPDLOG
 # exernalLibraries/spdlog/include
 SPDLOG_INCLUDE_DIR = exernalLibraries/spdlog/include
+EFLAGS += -I $(SPDLOG_INCLUDE_DIR)
 
 # STB
 # exernalLibraries/stb
 STB_INCLUDE_DIR = exernalLibraries/stb
+EFLAGS += -I $(STB_INCLUDE_DIR)
 
 # psd
 # exernalLibraries/portable-file-dialogs
 PFD_INCLUDE_DIR = exernalLibraries/portable-file-dialogs
+EFLAGS += -I $(PFD_INCLUDE_DIR)
 
 # TODO: GLFW lib
 $(BUILD_DIR)/glfw/src/libglfw3.a:
@@ -136,22 +140,22 @@ endif
 
 $(BUILD_DIR)/%.c.o: %.c $(HEADS)
 	mkdir -p $(dir $@)
-	$(CC) $(FLAGS) $< -o $@ $(EFLAGS) -I $(INCLUDE_DIR) -I $(SPDLOG_INCLUDE_DIR) -I $(PFD_INCLUDE_DIR) -I $(IMGUI_INCLUDE1_DIR) -I $(IMGUI_INCLUDE2_DIR)
+	$(CC) $(FLAGS) $< -o $@ $(EFLAGS)
 
 $(BUILD_DIR)/%.cpp.o: %.cpp $(HEADS)
 	mkdir -p $(dir $@)
 ifeq (clang++, $(NVCC))
-	$(NVCC) -Wall $(CUDA_FLAGS) $< -o $@ -I $(INCLUDE_DIR) -I $(SPDLOG_INCLUDE_DIR) -I $(STB_INCLUDE_DIR) -I $(STB_INCLUDE_DIR) -I $(PFD_INCLUDE_DIR) -I $(IMGUI_INCLUDE1_DIR) -I $(IMGUI_INCLUDE2_DIR)
+	$(NVCC) -Wall $(CUDA_FLAGS) $< -o $@ $(EFLAGS)
 else
-	$(NVCC) $(CUDA_FLAGS) $< -o $@ -I $(INCLUDE_DIR) -I $(SPDLOG_INCLUDE_DIR) -I $(STB_INCLUDE_DIR) -I $(PFD_INCLUDE_DIR) -I $(IMGUI_INCLUDE1_DIR) -I $(IMGUI_INCLUDE2_DIR) --compiler-options -Wall
+	$(NVCC) $(CUDA_FLAGS) $< -o $@ $(EFLAGS) --compiler-options -Wall
 endif
 
 $(BUILD_DIR)/%.cu.o: %.cu $(HEADS)
 	mkdir -p $(dir $@)
 ifeq (clang++, $(NVCC))
-	$(NVCC) -Wall $(CUDA_FLAGS) $< -o $@ -I $(INCLUDE_DIR) -I $(SPDLOG_INCLUDE_DIR) -I $(STB_INCLUDE_DIR) -I $(PFD_INCLUDE_DIR) -I $(IMGUI_INCLUDE1_DIR) -I $(IMGUI_INCLUDE2_DIR)
+	$(NVCC) -Wall $(CUDA_FLAGS) $< -o $@ $(EFLAGS)
 else
-	$(NVCC) $(CUDA_FLAGS) $< -o $@ -I $(INCLUDE_DIR) -I $(SPDLOG_INCLUDE_DIR) -I $(STB_INCLUDE_DIR) -I $(PFD_INCLUDE_DIR) -I $(IMGUI_INCLUDE1_DIR) -I $(IMGUI_INCLUDE2_DIR) --compiler-options -Wall
+	$(NVCC) $(CUDA_FLAGS) $< -o $@ $(EFLAGS) --compiler-options -Wall
 endif
 
 
