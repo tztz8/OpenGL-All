@@ -125,11 +125,6 @@ int main(int argc, char* argv[]) {
     SPDLOG_INFO("#####################");
     SPDLOG_INFO("#   Start of main   #");
     SPDLOG_INFO("#####################");
-    // Check if we have cuda
-    if (!checkCuda()) {
-        SPDLOG_ERROR("Cuda Not Avable");
-    }
-
     // Initialise GLFW
     SPDLOG_INFO("Initialise GLFW");
     glfwSetErrorCallback(glfw_error_callback);
