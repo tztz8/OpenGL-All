@@ -50,6 +50,9 @@
 #include "ModelLoader.h"
 #include "main.h"
 
+// Cuda Methods
+#include "cudaInfo.cuh"
+
 #include "Sphere.h"
 #include "Cube.h"
 
@@ -122,6 +125,11 @@ int main(int argc, char* argv[]) {
     SPDLOG_INFO("#####################");
     SPDLOG_INFO("#   Start of main   #");
     SPDLOG_INFO("#####################");
+    // Check if we have cuda
+    if (!checkCuda()) {
+        SPDLOG_ERROR("Cuda Not Avable");
+    }
+
     // Initialise GLFW
     SPDLOG_INFO("Initialise GLFW");
     glfwSetErrorCallback(glfw_error_callback);
@@ -230,6 +238,11 @@ int main(int argc, char* argv[]) {
         } else {
             SPDLOG_INFO(spdlog::fmt_lib::format("Current Set Normal Key: {} : Description: {}", node.first, node.second));
         }
+    }
+
+    // Check if we have cuda
+    if (!checkCuda()) {
+        SPDLOG_ERROR("Cuda Not Avable");
     }
 
     SPDLOG_INFO("setting up variables for the loop");
