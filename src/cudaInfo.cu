@@ -1,9 +1,3 @@
-//
-// Created by tztz8 on 3/10/23.
-//
-#include <stdio.h>
-#include <stdlib.h>
-
 // Logger Lib
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 #include <spdlog/spdlog.h>
