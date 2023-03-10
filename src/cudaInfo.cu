@@ -14,11 +14,11 @@ bool checkCuda() {
     for (auto i = 0; i < nDevices; i++) {
         cudaDeviceProp prop;
         cudaGetDeviceProperties(&prop, i);
-        SPDLOG_INFO(spdlog::fmt_lib::format("Debug: Cuda Device {}", prop.name));
-        SPDLOG_INFO(spdlog::fmt_lib::format("Debug: \t├ Compute Units {}", prop.multiProcessorCount));
-        SPDLOG_INFO(spdlog::fmt_lib::format("Debug: \t├ Max Work Group Size {}", prop.warpSize));
-        SPDLOG_INFO(spdlog::fmt_lib::format("Debug: \t├ Local Mem Size {}", prop.sharedMemPerBlock));
-        SPDLOG_INFO(spdlog::fmt_lib::format("Debug: \t└ Global Mem Size {}", prop.totalGlobalMem));
+        SPDLOG_INFO(spdlog::fmt_lib::format("Cuda Device {}", prop.name));
+        SPDLOG_INFO(spdlog::fmt_lib::format("\t├ Compute Units {}", prop.multiProcessorCount));
+        SPDLOG_INFO(spdlog::fmt_lib::format("\t├ Max Work Group Size {}", prop.warpSize));
+        SPDLOG_INFO(spdlog::fmt_lib::format("\t├ Local Mem Size {}", prop.sharedMemPerBlock));
+        SPDLOG_INFO(spdlog::fmt_lib::format("\t└ Global Mem Size {}", prop.totalGlobalMem));
     }
     return true;
 }
