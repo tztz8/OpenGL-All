@@ -77,6 +77,8 @@ bool freeGLUTSizeUpdate;
 // title info
 std::string original_title("GLFW - OpenGL-All");
 
+std::string gamePadInfo;
+
 /**
  * description on what the keyboard key used for <br>
  *  - Map Key is char for the keyboard key being used <br>
@@ -92,6 +94,8 @@ void setupImGUI();
 void windowSizeChangeCallback([[maybe_unused]] GLFWwindow* thisWindow, int width, int height);
 void updateAngle(GLfloat deltaTime);
 void keyboard(bool setDescription, GLfloat deltaTime);
+std::string gamepad(bool logGamePadButtons, GLfloat deltaTime);
+void joystick_callback(int jid, int event);
 void Display();
 void ImGUIDisplay();
 void Initialize();
@@ -232,6 +236,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    gamePadInfo = gamepad(true, 0);
+    glfwSetJoystickCallback(joystick_callback);
+
     SPDLOG_INFO("setting up variables for the loop");
 
     // DeltaTime variables
@@ -289,6 +296,7 @@ int main(int argc, char* argv[]) {
 
         // check for user input
         keyboard(false, deltaTime);
+        gamepad(false, deltaTime);
 
         // ImGui
         ImGui_ImplOpenGL3_NewFrame();
@@ -306,6 +314,8 @@ int main(int argc, char* argv[]) {
 
         // update data (often angles of things)
         updateAngle(deltaTime);
+
+
 
     }
     SPDLOG_INFO(spdlog::fmt_lib::format("Exit Window Loop, Avg FPS: {:0f}", avgFPS));
@@ -902,6 +912,12 @@ void ImGUIDisplay() {
             }
         }
 
+        if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+            if (ImGui::CollapsingHeader("Game Pad")) {
+                ImGui::Text("%s", gamePadInfo.c_str());
+            }
+        }
+
         ImGui::Spacing();
 
         if (ImGui::Button("Button")){
@@ -1147,6 +1163,159 @@ bool checkKey(char key, int GLFW_key) {
     returnValue = (!keyPressed[key] && keyCurrentlyPressed[key]);
     keyPressed[key] = keyCurrentlyPressed[key];
     return returnValue;
+}
+
+float clap(float value, float clapTopValue, float clapBottomValue) {
+    if (value > clapTopValue) {
+        return clapTopValue;
+    } else if (value < clapBottomValue) {
+        return clapBottomValue;
+    } else  {
+        return value;
+    }
+}
+
+float clap(float value, float clapValue) {
+    return clap(value, clapValue, clapValue * -1);
+}
+
+std::string gamepad(bool logGamePadButtons, GLfloat deltaTime) {
+    std::string returnString{};
+    if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+        float dirfitCheck = 0.09;
+
+        int axesCount;
+        const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
+
+        int buttonsCount;
+        const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonsCount);
+
+        if (logGamePadButtons) {
+            const char* jpname = glfwGetJoystickName(GLFW_JOYSTICK_1);
+            SPDLOG_INFO(spdlog::fmt_lib::format("Joy pad name: {}, axesCount: {}, buttonsCount: {}",
+                                                jpname,
+                                                axesCount,
+                                                buttonsCount));
+            returnString.append(spdlog::fmt_lib::format("Joy pad name: {}, axesCount: {}, buttonsCount: {}",
+                                                        jpname,
+                                                        axesCount,
+                                                        buttonsCount));
+            returnString.append("\n");
+        }
+
+        if (logGamePadButtons) {
+            SPDLOG_INFO(" - Hold Right Bumper to invert input");
+            returnString.append(" - Hold Right Bumper to invert input\n");
+        }
+        float invert = -1;
+        if (buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER]) {
+            invert *= -1;
+        }
+
+        if (logGamePadButtons) {
+            SPDLOG_INFO(" - Left Thumb Stick up and down for forward and backwards movement");
+            returnString.append(" - Left Thumb Stick up and down for forward and backwards movement\n");
+        }
+        if (logGamePadButtons) {
+            SPDLOG_INFO(" - Hold A Button and Left Thumb Stick up and down to move up and down instead");
+            returnString.append(" - Hold A Button and Left Thumb Stick up and down to move up and down instead\n");
+        }
+        if (std::abs(axes[GLFW_GAMEPAD_AXIS_LEFT_Y]) > dirfitCheck ) {
+            if (buttons[GLFW_GAMEPAD_BUTTON_A]) {
+                view_center.y += axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * movingScale * deltaTime * invert;
+                view_center.y = clap(view_center.y, 100.0f);
+            } else {
+                view_center.z += axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * movingScale * deltaTime * invert;
+                view_center.z = clap(view_center.z, 100.0f);
+            }
+        }
+        if (logGamePadButtons) {
+            SPDLOG_INFO(" - Left Thumb Stick left and right for left and right movement");
+            returnString.append(" - Left Thumb Stick left and right for left and right movement\n");
+        }
+        if (std::abs(axes[GLFW_GAMEPAD_AXIS_LEFT_X]) > dirfitCheck ) {
+            view_center.x += axes[GLFW_GAMEPAD_AXIS_LEFT_X] * movingScale * deltaTime * invert;
+            view_center.x = clap(view_center.x, 100.0f);
+        }
+
+
+        if (logGamePadButtons) {
+            SPDLOG_INFO(" - Right Thumb Stick up and down for camera up and down");
+            returnString.append(" - Right Thumb Stick up and down for camera up and down\n");
+        }
+        if (logGamePadButtons) {
+            SPDLOG_INFO(" - Hold Left Bumper and Right Thumb Stick up and down for zoom (fov) instead");
+            returnString.append(" - Hold Left Bumper and Right Thumb Stick up and down for zoom (fov) instead\n");
+        }
+        if (std::abs(axes[4]) > dirfitCheck ) {
+            if (buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]) {
+                fov += axes[4] * 15.0f * deltaTime * invert;
+                fov = clap(fov, 160.0f, 1.0f);
+            } else {
+                view_eye_y += axes[4] * 15.0f * deltaTime * invert;
+                view_eye_y = clap(view_eye_y, 30.0f);
+            }
+        }
+        if (logGamePadButtons) {
+            SPDLOG_INFO(" - Right Thumb Stick left and right for rotate camera");
+            returnString.append(" - Right Thumb Stick left and right for rotate camera\n");
+        }
+        if (std::abs(axes[3]) > dirfitCheck ) {
+            rotateAngle += axes[3] * 50.0f * deltaTime * invert;
+            if (rotateAngle >= 360.0f) {
+                rotateAngle -= 360.0f;
+            } else if(rotateAngle < 0.0f) {
+                rotateAngle += 360.0f;
+            }
+        }
+
+        if (logGamePadButtons) {
+            SPDLOG_INFO(" - Start to close program");
+            returnString.append(" - Start to close program\n");
+        }
+        if (buttons[7]) {
+            tellWindowToClose();
+            SPDLOG_INFO("User used Gamepad to quit program");
+        }
+
+        if (logGamePadButtons) {
+            SPDLOG_INFO(" - D Pad up and down for scaling model");
+            returnString.append(" - D Pad up and down for scaling model\n");
+        }
+        int change = 0;
+        if (buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP]) {
+            change = -1;
+        } else if (buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN]) {
+            change = 1;
+        }
+        if (change != 0) {
+            float modelOneScaleValue = model_Scale.x;
+            modelOneScaleValue += change * ((axes[5] + 1.0f + (1.0f / 15.0f)) * 15.0f) * deltaTime * invert;
+            modelOneScaleValue = clap(modelOneScaleValue, 80.0f, 0.75f);
+            model_Scale.x = modelOneScaleValue;
+            model_Scale.y = modelOneScaleValue;
+            model_Scale.z = modelOneScaleValue;
+//            SPDLOG_DEBUG(spdlog::fmt_lib::format("Value Change, button: {}, value: {}",
+//                                                 change, modelOneScaleValue));
+        }
+
+    }
+    return returnString;
+}
+
+void joystick_callback(int jid, int event)
+{
+    if (event == GLFW_CONNECTED)
+    {
+        // The joystick was connected
+        SPDLOG_INFO("Joy Pad Connected");
+    }
+    else if (event == GLFW_DISCONNECTED)
+    {
+        // The joystick was disconnected
+        SPDLOG_INFO("Joy Pad Disconnected");
+    }
+    gamePadInfo = gamepad(true, 0);
 }
 
 int windowPosAtFullScreenX = 0;
